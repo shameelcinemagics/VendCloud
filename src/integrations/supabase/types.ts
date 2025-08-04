@@ -14,10 +14,204 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      products: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sales: {
+        Row: {
+          id: string
+          product_id: string
+          quantity: number
+          slot_number: number
+          sold_at: string
+          vending_machine_id: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          quantity?: number
+          slot_number: number
+          sold_at?: string
+          vending_machine_id: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          quantity?: number
+          slot_number?: number
+          sold_at?: string
+          vending_machine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_vending_machine_id_fkey"
+            columns: ["vending_machine_id"]
+            isOneToOne: false
+            referencedRelation: "machine_stock"
+            referencedColumns: ["vending_machine_id"]
+          },
+          {
+            foreignKeyName: "sales_vending_machine_id_fkey"
+            columns: ["vending_machine_id"]
+            isOneToOne: false
+            referencedRelation: "vending_machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      slots: {
+        Row: {
+          created_at: string
+          id: string
+          max_capacity: number
+          product_id: string | null
+          quantity: number
+          slot_number: number
+          vending_machine_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_capacity?: number
+          product_id?: string | null
+          quantity?: number
+          slot_number: number
+          vending_machine_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_capacity?: number
+          product_id?: string | null
+          quantity?: number
+          slot_number?: number
+          vending_machine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slots_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slots_vending_machine_id_fkey"
+            columns: ["vending_machine_id"]
+            isOneToOne: false
+            referencedRelation: "machine_stock"
+            referencedColumns: ["vending_machine_id"]
+          },
+          {
+            foreignKeyName: "slots_vending_machine_id_fkey"
+            columns: ["vending_machine_id"]
+            isOneToOne: false
+            referencedRelation: "vending_machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vending_machines: {
+        Row: {
+          created_at: string
+          id: string
+          location: string
+          machine_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location: string
+          machine_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location?: string
+          machine_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      machine_stock: {
+        Row: {
+          location: string | null
+          machine_id: string | null
+          max_capacity: number | null
+          product_id: string | null
+          product_name: string | null
+          product_price: number | null
+          quantity: number | null
+          slot_id: string | null
+          slot_number: number | null
+          vending_machine_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slots_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
