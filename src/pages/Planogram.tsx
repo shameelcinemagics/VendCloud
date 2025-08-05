@@ -263,94 +263,85 @@ const Planogram = () => {
                 </SelectContent>
               </Select>
             </div>
-            {selectedMachine && (
-              <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                setIsDialogOpen(open);
-                if (!open) resetForm();
-              }}>
-                <DialogTrigger asChild>
-                  <Button
-                    onClick={() => {
-                      setFormData(prev => ({ ...prev, slot_number: getNextSlotNumber() }));
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Slot
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{editingSlot ? 'Edit Slot' : 'Add New Slot'}</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="slot_number">Slot Number</Label>
-                      <Input
-                        id="slot_number"
-                        type="number"
-                        min="1"
-                        value={formData.slot_number}
-                        onChange={(e) => setFormData({ ...formData, slot_number: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="product_id">Product</Label>
-                      <Select 
-                        value={formData.product_id} 
-                        onValueChange={(value) => setFormData({ ...formData, product_id: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a product (optional)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No Product</SelectItem>
-                          {products.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name} - ${product.price.toFixed(2)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="quantity">Current Quantity</Label>
-                        <Input
-                          id="quantity"
-                          type="number"
-                          min="0"
-                          value={formData.quantity}
-                          onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="max_capacity">Max Capacity</Label>
-                        <Input
-                          id="max_capacity"
-                          type="number"
-                          min="1"
-                          value={formData.max_capacity}
-                          onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit">
-                        <Save className="h-4 w-4 mr-2" />
-                        {editingSlot ? 'Update' : 'Create'}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            )}
           </div>
+
+          {/* Edit Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Slot</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="slot_number">Slot Number</Label>
+                  <Input
+                    id="slot_number"
+                    type="number"
+                    min="1"
+                    value={formData.slot_number}
+                    onChange={(e) => setFormData({ ...formData, slot_number: e.target.value })}
+                    required
+                    disabled
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="product_id">Product</Label>
+                  <Select 
+                    value={formData.product_id} 
+                    onValueChange={(value) => setFormData({ ...formData, product_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a product (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Product</SelectItem>
+                      {products.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name} - ${product.price.toFixed(2)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Current Quantity</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min="0"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="max_capacity">Max Capacity</Label>
+                    <Input
+                      id="max_capacity"
+                      type="number"
+                      min="1"
+                      value={formData.max_capacity}
+                      onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    <Save className="h-4 w-4 mr-2" />
+                    Update
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
 
@@ -408,13 +399,14 @@ const Planogram = () => {
                           </div>
                           {slot?.product_id && slot.product ? (
                             <div className="flex-1 flex flex-col items-center justify-center text-center space-y-1">
-                              {slot.product.image_url && (
-                                <img 
-                                  src={slot.product.image_url} 
-                                  alt={slot.product.name}
-                                  className="w-8 h-8 object-cover rounded"
-                                />
-                              )}
+                               {slot.product.image_url && (
+                                 <img 
+                                   src={slot.product.image_url} 
+                                   alt={slot.product.name}
+                                   className="w-20 h-20 object-cover rounded"
+                                   style={{ maxWidth: '400px', maxHeight: '400px' }}
+                                 />
+                               )}
                               <div className="text-xs font-medium truncate w-full">
                                 {slot.product.name}
                               </div>
@@ -441,21 +433,13 @@ const Planogram = () => {
                                 <div className="text-xs text-muted-foreground">Empty</div>
                               </div>
                             </div>
-                          ) : (
-                            <div className="flex-1 flex items-center justify-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
-                                onClick={() => {
-                                  setFormData(prev => ({ ...prev, slot_number: slotNumber.toString() }));
-                                  setIsDialogOpen(true);
-                                }}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )}
+                           ) : (
+                             <div className="flex-1 flex items-center justify-center">
+                               <div className="text-center">
+                                 <div className="text-xs text-muted-foreground">No Slot</div>
+                               </div>
+                             </div>
+                           )}
                         </CardContent>
                       </Card>
                     );
