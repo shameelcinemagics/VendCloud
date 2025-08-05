@@ -365,15 +365,15 @@ const Planogram = () => {
                 <div className="text-center text-sm text-muted-foreground">
                   Planogram Layout: 10 Columns × 6 Rows (60 Slots Total)
                 </div>
-                <div className="grid grid-cols-10 gap-1 max-w-6xl mx-auto">
+                <div className="grid grid-cols-5 gap-2 max-w-full mx-auto">
                   {createGridLayout().map((slot, index) => {
                     const slotNumber = index + 1;
                     const row = Math.floor(index / 10) + 1;
                     const col = (index % 10) + 1;
                     
                     return (
-                      <Card key={slotNumber} className="relative aspect-square">
-                        <CardContent className="p-2 h-full flex flex-col">
+                      <Card key={slotNumber} className="relative w-48 h-64">
+                        <CardContent className="p-3 h-full flex flex-col">
                           <div className="flex justify-between items-center mb-1">
                             <Badge variant="outline" className="text-xs">{slotNumber}</Badge>
                             {slot && (
@@ -403,8 +403,8 @@ const Planogram = () => {
                                  <img 
                                    src={slot.product.image_url} 
                                    alt={slot.product.name}
-                                   className="w-20 h-20 object-cover rounded"
-                                   style={{ maxWidth: '400px', maxHeight: '400px' }}
+                                   className="w-32 h-32 object-cover rounded mx-auto"
+                                   style={{ width: '128px', height: '128px' }}
                                  />
                                )}
                               <div className="text-xs font-medium truncate w-full">
