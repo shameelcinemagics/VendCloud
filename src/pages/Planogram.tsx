@@ -126,7 +126,7 @@ const Planogram = () => {
       const slotData = {
         vending_machine_id: selectedMachine,
         slot_number: parseInt(formData.slot_number),
-        product_id: formData.product_id || null,
+        product_id: formData.product_id === 'none' || !formData.product_id ? null : formData.product_id,
         quantity: parseInt(formData.quantity),
         max_capacity: parseInt(formData.max_capacity)
       };
@@ -174,7 +174,7 @@ const Planogram = () => {
     setEditingSlot(slot);
     setFormData({
       slot_number: slot.slot_number.toString(),
-      product_id: slot.product_id || '',
+      product_id: slot.product_id || 'none',
       quantity: slot.quantity.toString(),
       max_capacity: slot.max_capacity.toString()
     });
@@ -263,7 +263,7 @@ const Planogram = () => {
                           <SelectValue placeholder="Select a product (optional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No Product</SelectItem>
+                          <SelectItem value="none">No Product</SelectItem>
                           {products.map((product) => (
                             <SelectItem key={product.id} value={product.id}>
                               {product.name} - ${product.price.toFixed(2)}
