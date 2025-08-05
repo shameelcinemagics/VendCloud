@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Grid3X3, Plus, Edit, Save } from 'lucide-react';
+import { Grid3X3, Plus, Edit, Save, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface VendingMachine {
@@ -20,6 +20,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
+  image_url?: string;
 }
 
 interface Slot {
@@ -78,7 +79,7 @@ const Planogram = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price');
+        .select('id, name, price, image_url');
 
       if (error) throw error;
       setProducts(data || []);
@@ -99,7 +100,8 @@ const Planogram = () => {
           products (
             id,
             name,
-            price
+            price,
+            image_url
           )
         `)
         .eq('vending_machine_id', selectedMachine)
@@ -186,10 +188,49 @@ const Planogram = () => {
     setEditingSlot(null);
   };
 
+  const handleDelete = async (slotId: string) => {
+    if (!confirm('Are you sure you want to delete this slot?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('slots')
+        .delete()
+        .eq('id', slotId);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Slot deleted successfully"
+      });
+      fetchSlots();
+    } catch (error) {
+      console.error('Error deleting slot:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete slot",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getNextSlotNumber = () => {
     if (slots.length === 0) return '1';
     const maxSlot = Math.max(...slots.map(slot => slot.slot_number));
     return (maxSlot + 1).toString();
+  };
+
+  // Create a grid layout of 10 columns x 6 rows (60 slots total)
+  const createGridLayout = () => {
+    const totalSlots = 60; // 10 columns × 6 rows
+    const grid = [];
+    
+    for (let i = 1; i <= totalSlots; i++) {
+      const slot = slots.find(s => s.slot_number === i);
+      grid.push(slot || null);
+    }
+    
+    return grid;
   };
 
   return (
@@ -329,52 +370,97 @@ const Planogram = () => {
                 <p className="text-muted-foreground">No slots configured for this machine. Add your first slot to get started.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {slots.map((slot) => (
-                  <Card key={slot.id} className="relative">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-center">
-                        <Badge variant="outline">Slot {slot.slot_number}</Badge>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(slot)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      {slot.product_id && slot.product ? (
-                        <div className="space-y-2">
-                          <h4 className="font-medium">{slot.product.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            ${slot.product.price.toFixed(2)}
-                          </p>
-                          <div className="flex justify-between text-sm">
-                            <span>Stock:</span>
-                            <span className={slot.quantity === 0 ? 'text-destructive' : ''}>
-                              {slot.quantity}/{slot.max_capacity}
-                            </span>
+              <div className="space-y-4">
+                <div className="text-center text-sm text-muted-foreground">
+                  Planogram Layout: 10 Columns × 6 Rows (60 Slots Total)
+                </div>
+                <div className="grid grid-cols-10 gap-1 max-w-6xl mx-auto">
+                  {createGridLayout().map((slot, index) => {
+                    const slotNumber = index + 1;
+                    const row = Math.floor(index / 10) + 1;
+                    const col = (index % 10) + 1;
+                    
+                    return (
+                      <Card key={slotNumber} className="relative aspect-square">
+                        <CardContent className="p-2 h-full flex flex-col">
+                          <div className="flex justify-between items-center mb-1">
+                            <Badge variant="outline" className="text-xs">{slotNumber}</Badge>
+                            {slot && (
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => handleEdit(slot)}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => handleDelete(slot.id)}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
                           </div>
-                          <div className="w-full bg-muted rounded-full h-2">
-                            <div
-                              className="bg-primary h-2 rounded-full transition-all"
-                              style={{
-                                width: `${(slot.quantity / slot.max_capacity) * 100}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center py-4">
-                          <p className="text-sm text-muted-foreground">Empty Slot</p>
-                          <p className="text-xs text-muted-foreground">No product assigned</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+                          {slot?.product_id && slot.product ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-1">
+                              {slot.product.image_url && (
+                                <img 
+                                  src={slot.product.image_url} 
+                                  alt={slot.product.name}
+                                  className="w-8 h-8 object-cover rounded"
+                                />
+                              )}
+                              <div className="text-xs font-medium truncate w-full">
+                                {slot.product.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                ${slot.product.price.toFixed(2)}
+                              </div>
+                              <div className="text-xs">
+                                <span className={slot.quantity === 0 ? 'text-destructive' : 'text-green-600'}>
+                                  {slot.quantity}/{slot.max_capacity}
+                                </span>
+                              </div>
+                              <div className="w-full bg-muted rounded-full h-1">
+                                <div
+                                  className="bg-primary h-1 rounded-full transition-all"
+                                  style={{
+                                    width: `${(slot.quantity / slot.max_capacity) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ) : slot ? (
+                            <div className="flex-1 flex items-center justify-center">
+                              <div className="text-center">
+                                <div className="text-xs text-muted-foreground">Empty</div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex-1 flex items-center justify-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, slot_number: slotNumber.toString() }));
+                                  setIsDialogOpen(true);
+                                }}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </CardContent>

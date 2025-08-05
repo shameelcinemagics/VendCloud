@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Product {
@@ -28,6 +28,8 @@ const Products = () => {
     price: '',
     image_url: ''
   });
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -55,14 +57,53 @@ const Products = () => {
     }
   };
 
+  const handleFileUpload = async (file: File): Promise<string | null> => {
+    try {
+      setUploading(true);
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      let imageUrl = formData.image_url;
+      
+      // Upload new image if selected
+      if (selectedFile) {
+        imageUrl = await handleFileUpload(selectedFile);
+        if (!imageUrl) return; // Upload failed
+      }
+
       const productData = {
         name: formData.name,
         price: parseFloat(formData.price),
-        image_url: formData.image_url || null
+        image_url: imageUrl || null
       };
 
       if (editingProduct) {
@@ -93,6 +134,7 @@ const Products = () => {
       setIsDialogOpen(false);
       setEditingProduct(null);
       setFormData({ name: '', price: '', image_url: '' });
+      setSelectedFile(null);
       fetchProducts();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -143,6 +185,7 @@ const Products = () => {
   const resetForm = () => {
     setFormData({ name: '', price: '', image_url: '' });
     setEditingProduct(null);
+    setSelectedFile(null);
   };
 
   if (loading) {
@@ -199,21 +242,45 @@ const Products = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="image_url">Image URL (Optional)</Label>
-                <Input
-                  id="image_url"
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
-                />
+                <Label>Product Image</Label>
+                <div className="space-y-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    disabled={uploading}
+                  />
+                  {selectedFile && (
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <span className="text-sm">{selectedFile.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedFile(null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <div className="text-xs text-muted-foreground">
+                    Or enter image URL manually:
+                  </div>
+                  <Input
+                    type="url"
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                    disabled={!!selectedFile}
+                  />
+                </div>
               </div>
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingProduct ? 'Update' : 'Create'}
+                <Button type="submit" disabled={uploading}>
+                  {uploading ? 'Uploading...' : editingProduct ? 'Update' : 'Create'}
                 </Button>
               </div>
             </form>
