@@ -346,11 +346,11 @@ const Planogram = () => {
       </Card>
 
       {selectedMachine && (
-        <Card>
+        <Card className="h-[800px]">
           <CardHeader>
             <CardTitle>Slot Configuration</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="h-full p-0">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -361,18 +361,18 @@ const Planogram = () => {
                 <p className="text-muted-foreground">No slots configured for this machine. Add your first slot to get started.</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="text-center text-sm text-muted-foreground">
+              <div className="h-full overflow-auto p-6">
+                <div className="text-center text-sm text-muted-foreground mb-4">
                   Planogram Layout: 10 Columns × 6 Rows (60 Slots Total)
                 </div>
-                <div className="grid grid-cols-10 gap-1 max-w-7xl mx-auto">
+                <div className="grid grid-cols-10 gap-3 max-w-none">
                   {createGridLayout().map((slot, index) => {
                     const slotNumber = index + 1;
                     const row = Math.floor(index / 10) + 1;
                     const col = (index % 10) + 1;
                     
                     return (
-                      <Card key={slotNumber} className="relative aspect-square min-w-0">
+                      <Card key={slotNumber} className="relative w-24 h-32">
                         <CardContent className="p-2 h-full flex flex-col">
                           <div className="flex justify-between items-center mb-1">
                             <Badge variant="outline" className="text-xs">{slotNumber}</Badge>
@@ -381,18 +381,18 @@ const Planogram = () => {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-5 w-5 p-0"
+                                  className="h-4 w-4 p-0"
                                   onClick={() => handleEdit(slot)}
                                 >
-                                  <Edit className="h-3 w-3" />
+                                  <Edit className="h-2 w-2" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-5 w-5 p-0"
+                                  className="h-4 w-4 p-0"
                                   onClick={() => handleDelete(slot.id)}
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  <Trash2 className="h-2 w-2" />
                                 </Button>
                               </div>
                             )}
@@ -403,7 +403,7 @@ const Planogram = () => {
                                  <img 
                                    src={slot.products.image_url} 
                                    alt={slot.products.name}
-                                   className="w-16 h-16 object-cover rounded mx-auto"
+                                   className="w-12 h-12 object-cover rounded mx-auto"
                                  />
                                )}
                               <div className="text-xs font-medium truncate w-full">
