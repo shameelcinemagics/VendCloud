@@ -365,15 +365,15 @@ const Planogram = () => {
                 <div className="text-center text-sm text-muted-foreground">
                   Planogram Layout: 10 Columns × 6 Rows (60 Slots Total)
                 </div>
-                <div className="grid grid-cols-5 gap-2 max-w-full mx-auto">
+                <div className="grid grid-cols-10 gap-1 max-w-7xl mx-auto">
                   {createGridLayout().map((slot, index) => {
                     const slotNumber = index + 1;
                     const row = Math.floor(index / 10) + 1;
                     const col = (index % 10) + 1;
                     
                     return (
-                      <Card key={slotNumber} className="relative w-48 h-64">
-                        <CardContent className="p-3 h-full flex flex-col">
+                      <Card key={slotNumber} className="relative aspect-square min-w-0">
+                        <CardContent className="p-2 h-full flex flex-col">
                           <div className="flex justify-between items-center mb-1">
                             <Badge variant="outline" className="text-xs">{slotNumber}</Badge>
                             {slot && (
@@ -381,7 +381,7 @@ const Planogram = () => {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0"
+                                  className="h-5 w-5 p-0"
                                   onClick={() => handleEdit(slot)}
                                 >
                                   <Edit className="h-3 w-3" />
@@ -389,7 +389,7 @@ const Planogram = () => {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0"
+                                  className="h-5 w-5 p-0"
                                   onClick={() => handleDelete(slot.id)}
                                 >
                                   <Trash2 className="h-3 w-3" />
@@ -397,21 +397,20 @@ const Planogram = () => {
                               </div>
                             )}
                           </div>
-                          {slot?.product_id && slot.product ? (
+                          {slot?.product_id && slot.products ? (
                             <div className="flex-1 flex flex-col items-center justify-center text-center space-y-1">
-                               {slot.product.image_url && (
+                               {slot.products.image_url && (
                                  <img 
-                                   src={slot.product.image_url} 
-                                   alt={slot.product.name}
-                                   className="w-32 h-32 object-cover rounded mx-auto"
-                                   style={{ width: '128px', height: '128px' }}
+                                   src={slot.products.image_url} 
+                                   alt={slot.products.name}
+                                   className="w-16 h-16 object-cover rounded mx-auto"
                                  />
                                )}
                               <div className="text-xs font-medium truncate w-full">
-                                {slot.product.name}
+                                {slot.products.name}
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                ${slot.product.price.toFixed(2)}
+                                ${slot.products.price.toFixed(2)}
                               </div>
                               <div className="text-xs">
                                 <span className={slot.quantity === 0 ? 'text-destructive' : 'text-green-600'}>
