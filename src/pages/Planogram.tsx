@@ -346,7 +346,7 @@ const Planogram = () => {
       </Card>
 
       {selectedMachine && (
-        <Card className="h-[1000px]">
+        <Card className="h-[800px]">
           <CardHeader>
             <CardTitle>Slot Configuration</CardTitle>
           </CardHeader>
@@ -372,8 +372,8 @@ const Planogram = () => {
                     const col = (index % 10) + 1;
                     
                     return (
-                      <Card key={slotNumber} className="relative w-32 h-40">
-                        <CardContent className="p-3 h-full flex flex-col">
+                      <Card key={slotNumber} className="relative w-24 h-32">
+                        <CardContent className="p-2 h-full flex flex-col">
                           <div className="flex justify-between items-center mb-1">
                             <Badge variant="outline" className="text-xs">{slotNumber}</Badge>
                             {slot && (
@@ -403,7 +403,7 @@ const Planogram = () => {
                                  <img 
                                    src={slot.products.image_url} 
                                    alt={slot.products.name}
-                                   className="w-16 h-16 object-cover rounded mx-auto"
+                                   className="w-12 h-12 object-cover rounded mx-auto"
                                  />
                                )}
                               <div className="text-xs font-medium truncate w-full">
