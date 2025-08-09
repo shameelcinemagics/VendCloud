@@ -216,14 +216,32 @@ const Planogram = () => {
 
   const getNextSlotNumber = () => {
     if (slots.length === 0) return '1';
-    const maxSlot = Math.max(...slots.map(slot => slot.slot_number));
-    return (maxSlot + 1).toString();
+    
+    // Find the first available slot number (1-60)
+    for (let i = 1; i <= 60; i++) {
+      if (!slots.find(slot => slot.slot_number === i)) {
+        return i.toString();
+      }
+    }
+    
+    // If all 60 slots are taken, return the next number
+    return '61';
   };
 
   const handleAddSlot = () => {
+    const nextSlot = getNextSlotNumber();
+    if (parseInt(nextSlot) > 60) {
+      toast({
+        title: "Maximum slots reached",
+        description: "This machine already has 60 slots (maximum capacity)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setEditingSlot(null);
     setFormData({ 
-      slot_number: getNextSlotNumber(), 
+      slot_number: nextSlot, 
       product_id: '', 
       quantity: '0', 
       max_capacity: '10' 
@@ -231,16 +249,17 @@ const Planogram = () => {
     setIsDialogOpen(true);
   };
 
-  // Create rows of slots with max 10 per row
+  // Create a fixed 10x6 grid layout (60 slots total)
   const createGridLayout = () => {
-    const sortedSlots = [...slots].sort((a, b) => a.slot_number - b.slot_number);
-    const rows = [];
+    const totalSlots = 60; // 10 columns × 6 rows
+    const grid = [];
     
-    for (let i = 0; i < sortedSlots.length; i += 10) {
-      rows.push(sortedSlots.slice(i, i + 10));
+    for (let i = 1; i <= totalSlots; i++) {
+      const slot = slots.find(s => s.slot_number === i);
+      grid.push(slot || null);
     }
     
-    return rows;
+    return grid;
   };
 
   return (
@@ -378,17 +397,21 @@ const Planogram = () => {
               </div>
             ) : (
               <div className="h-full overflow-auto p-8">
-                <div className="text-center text-base text-muted-foreground mb-6">
-                  Planogram Layout - Max 10 Slots per Row ({slots.length} Slots Total)
+                <div className="text-center text-lg text-muted-foreground mb-6">
+                  Planogram Layout: 10 Columns × 6 Rows (60 Slots Total)
                 </div>
-                <div className="space-y-6">
-                  {createGridLayout().map((row, rowIndex) => (
-                    <div key={rowIndex} className="flex flex-wrap gap-4 justify-center">
-                      {row.map((slot) => (
-                        <Card key={slot.id} className="relative w-48 h-72 flex-shrink-0">
-                          <CardContent className="p-4 h-full flex flex-col">
-                            <div className="flex justify-between items-center mb-2">
-                              <Badge variant="outline" className="text-base">{slot.slot_number}</Badge>
+                <div className="grid grid-cols-10 gap-4 justify-items-center max-w-fit mx-auto">
+                  {createGridLayout().map((slot, index) => {
+                    const slotNumber = index + 1;
+                    const row = Math.floor(index / 10) + 1;
+                    const col = (index % 10) + 1;
+                    
+                    return (
+                      <Card key={slotNumber} className="relative w-64 h-80 flex-shrink-0">
+                        <CardContent className="p-4 h-full flex flex-col">
+                          <div className="flex justify-between items-center mb-2">
+                            <Badge variant="outline" className="text-base font-medium">{slotNumber}</Badge>
+                            {slot && (
                               <div className="flex gap-1">
                                 <Button
                                   variant="ghost"
@@ -407,48 +430,72 @@ const Planogram = () => {
                                   <Trash2 className="h-5 w-5" />
                                 </Button>
                               </div>
-                            </div>
-                            {slot.product_id && slot.products ? (
-                              <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
-                                {slot.products.image_url && (
-                                  <img 
-                                    src={slot.products.image_url} 
-                                    alt={slot.products.name}
-                                    className="w-24 h-24 object-cover rounded-lg mx-auto"
-                                  />
-                                )}
-                                <div className="text-sm font-medium truncate w-full">
-                                  {slot.products.name}
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  ${slot.products.price.toFixed(2)}
-                                </div>
-                                <div className="text-sm">
-                                  <span className={slot.quantity === 0 ? 'text-destructive' : 'text-green-600'}>
-                                    {slot.quantity}/{slot.max_capacity}
-                                  </span>
-                                </div>
-                                <div className="w-full bg-muted rounded-full h-2">
-                                  <div
-                                    className="bg-primary h-2 rounded-full transition-all"
-                                    style={{
-                                      width: `${(slot.quantity / slot.max_capacity) * 100}%`,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex-1 flex items-center justify-center">
-                                <div className="text-center">
-                                  <div className="text-sm text-muted-foreground">Empty Slot</div>
-                                </div>
-                              </div>
                             )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ))}
+                          </div>
+                          {slot?.product_id && slot.products ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3">
+                              {slot.products.image_url && (
+                                <img 
+                                  src={slot.products.image_url} 
+                                  alt={slot.products.name}
+                                  className="w-32 h-32 object-cover rounded-lg mx-auto"
+                                />
+                              )}
+                              <div className="text-base font-medium truncate w-full">
+                                {slot.products.name}
+                              </div>
+                              <div className="text-base text-muted-foreground">
+                                ${slot.products.price.toFixed(2)}
+                              </div>
+                              <div className="text-base">
+                                <span className={slot.quantity === 0 ? 'text-destructive' : 'text-green-600'}>
+                                  {slot.quantity}/{slot.max_capacity}
+                                </span>
+                              </div>
+                              <div className="w-full bg-muted rounded-full h-3">
+                                <div
+                                  className="bg-primary h-3 rounded-full transition-all"
+                                  style={{
+                                    width: `${(slot.quantity / slot.max_capacity) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ) : slot ? (
+                            <div className="flex-1 flex items-center justify-center">
+                              <div className="text-center">
+                                <div className="text-base text-muted-foreground">Empty Slot</div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex-1 flex items-center justify-center">
+                              <div className="text-center">
+                                <div className="text-base text-muted-foreground">No Slot</div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-2"
+                                  onClick={() => {
+                                    setEditingSlot(null);
+                                    setFormData({ 
+                                      slot_number: slotNumber.toString(), 
+                                      product_id: '', 
+                                      quantity: '0', 
+                                      max_capacity: '10' 
+                                    });
+                                    setIsDialogOpen(true);
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4 mr-1" />
+                                  Add
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             )}
