@@ -346,7 +346,7 @@ const Planogram = () => {
       </Card>
 
       {selectedMachine && (
-        <Card className="h-[1200px]">
+        <Card className="h-[1400px]">
           <CardHeader>
             <CardTitle>Slot Configuration</CardTitle>
           </CardHeader>
@@ -361,65 +361,65 @@ const Planogram = () => {
                 <p className="text-muted-foreground">No slots configured for this machine. Add your first slot to get started.</p>
               </div>
             ) : (
-              <div className="h-full overflow-auto p-6">
-                <div className="text-center text-sm text-muted-foreground mb-4">
+              <div className="h-full overflow-auto p-8">
+                <div className="text-center text-base text-muted-foreground mb-6">
                   Planogram Layout: 10 Columns × 6 Rows (60 Slots Total)
                 </div>
-                <div className="grid grid-cols-10 gap-6 max-w-none">
+                <div className="grid grid-cols-10 gap-8 justify-items-center max-w-fit mx-auto">
                   {createGridLayout().map((slot, index) => {
                     const slotNumber = index + 1;
                     const row = Math.floor(index / 10) + 1;
                     const col = (index % 10) + 1;
                     
                     return (
-                      <Card key={slotNumber} className="relative w-48 h-64">
+                      <Card key={slotNumber} className="relative w-56 h-80 flex-shrink-0">
                         <CardContent className="p-4 h-full flex flex-col">
-                          <div className="flex justify-between items-center mb-1">
-                            <Badge variant="outline" className="text-sm">{slotNumber}</Badge>
+                          <div className="flex justify-between items-center mb-2">
+                            <Badge variant="outline" className="text-base">{slotNumber}</Badge>
                             {slot && (
                               <div className="flex gap-1">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0"
+                                  className="h-8 w-8 p-0"
                                   onClick={() => handleEdit(slot)}
                                 >
-                                  <Edit className="h-4 w-4" />
+                                  <Edit className="h-5 w-5" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0"
+                                  className="h-8 w-8 p-0"
                                   onClick={() => handleDelete(slot.id)}
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Trash2 className="h-5 w-5" />
                                 </Button>
                               </div>
                             )}
                           </div>
                           {slot?.product_id && slot.products ? (
-                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
+                            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3">
                                {slot.products.image_url && (
                                  <img 
                                    src={slot.products.image_url} 
                                    alt={slot.products.name}
-                                   className="w-24 h-24 object-cover rounded mx-auto"
+                                   className="w-32 h-32 object-cover rounded-lg mx-auto"
                                  />
                                )}
-                              <div className="text-sm font-medium truncate w-full">
+                              <div className="text-base font-medium truncate w-full">
                                 {slot.products.name}
                               </div>
-                              <div className="text-sm text-muted-foreground">
+                              <div className="text-base text-muted-foreground">
                                 ${slot.products.price.toFixed(2)}
                               </div>
-                              <div className="text-sm">
+                              <div className="text-base">
                                 <span className={slot.quantity === 0 ? 'text-destructive' : 'text-green-600'}>
                                   {slot.quantity}/{slot.max_capacity}
                                 </span>
                               </div>
-                              <div className="w-full bg-muted rounded-full h-2">
+                              <div className="w-full bg-muted rounded-full h-3">
                                 <div
-                                  className="bg-primary h-2 rounded-full transition-all"
+                                  className="bg-primary h-3 rounded-full transition-all"
                                   style={{
                                     width: `${(slot.quantity / slot.max_capacity) * 100}%`,
                                   }}
@@ -429,13 +429,13 @@ const Planogram = () => {
                           ) : slot ? (
                             <div className="flex-1 flex items-center justify-center">
                               <div className="text-center">
-                                <div className="text-sm text-muted-foreground">Empty</div>
+                                <div className="text-base text-muted-foreground">Empty</div>
                               </div>
                             </div>
                            ) : (
                              <div className="flex-1 flex items-center justify-center">
                                <div className="text-center">
-                                 <div className="text-sm text-muted-foreground">No Slot</div>
+                                 <div className="text-base text-muted-foreground">No Slot</div>
                                </div>
                              </div>
                            )}
