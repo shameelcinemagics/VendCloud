@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +18,13 @@ interface Product {
   price: number;
   image_url?: string;
   created_at: string;
+  ingredients?: string | null;
+  health_rating?: number | null;
+  calories?: number | null;
+  fat?: number | null;
+  carbs?: number | null;
+  protein?: number | null;
+  sodium?: number | null;
 }
 
 const Products = () => {
@@ -23,11 +32,18 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    image_url: ''
-  });
+const [formData, setFormData] = useState({
+  name: '',
+  price: '',
+  image_url: '',
+  ingredients: '',
+  health_rating: '',
+  calories: '',
+  fat: '',
+  carbs: '',
+  protein: '',
+  sodium: ''
+});
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
@@ -100,10 +116,18 @@ const Products = () => {
         if (!imageUrl) return; // Upload failed
       }
 
+      const toNum = (v: string) => (v === '' ? null : Number(v));
       const productData = {
         name: formData.name,
         price: parseFloat(formData.price),
-        image_url: imageUrl || null
+        image_url: imageUrl || null,
+        ingredients: formData.ingredients || null,
+        health_rating: formData.health_rating === '' ? null : parseInt(formData.health_rating),
+        calories: toNum(formData.calories),
+        fat: toNum(formData.fat),
+        carbs: toNum(formData.carbs),
+        protein: toNum(formData.protein),
+        sodium: toNum(formData.sodium),
       };
 
       if (editingProduct) {
@@ -133,8 +157,7 @@ const Products = () => {
 
       setIsDialogOpen(false);
       setEditingProduct(null);
-      setFormData({ name: '', price: '', image_url: '' });
-      setSelectedFile(null);
+      resetForm();
       fetchProducts();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -148,11 +171,18 @@ const Products = () => {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    setFormData({
-      name: product.name,
-      price: product.price.toString(),
-      image_url: product.image_url || ''
-    });
+  setFormData({
+    name: product.name,
+    price: product.price.toString(),
+    image_url: product.image_url || '',
+    ingredients: product.ingredients || '',
+    health_rating: product.health_rating?.toString() || '',
+    calories: product.calories?.toString() || '',
+    fat: product.fat?.toString() || '',
+    carbs: product.carbs?.toString() || '',
+    protein: product.protein?.toString() || '',
+    sodium: product.sodium?.toString() || '',
+  });
     setIsDialogOpen(true);
   };
 
@@ -182,11 +212,11 @@ const Products = () => {
     }
   };
 
-  const resetForm = () => {
-    setFormData({ name: '', price: '', image_url: '' });
-    setEditingProduct(null);
-    setSelectedFile(null);
-  };
+const resetForm = () => {
+  setFormData({ name: '', price: '', image_url: '', ingredients: '', health_rating: '', calories: '', fat: '', carbs: '', protein: '', sodium: '' });
+  setEditingProduct(null);
+  setSelectedFile(null);
+};
 
   if (loading) {
     return (
@@ -241,7 +271,7 @@ const Products = () => {
                   required
                 />
               </div>
-              <div className="space-y-2">
+<div className="space-y-2">
                 <Label>Product Image</Label>
                 <div className="space-y-2">
                   <Input
@@ -263,9 +293,7 @@ const Products = () => {
                       </Button>
                     </div>
                   )}
-                  <div className="text-xs text-muted-foreground">
-                    Or enter image URL manually:
-                  </div>
+                  <div className="text-xs text-muted-foreground">Or enter image URL manually:</div>
                   <Input
                     type="url"
                     value={formData.image_url}
@@ -273,6 +301,56 @@ const Products = () => {
                     placeholder="https://example.com/image.jpg"
                     disabled={!!selectedFile}
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ingredients">Ingredients</Label>
+                <Textarea
+                  id="ingredients"
+                  value={formData.ingredients}
+                  onChange={(e) => setFormData({ ...formData, ingredients: e.target.value })}
+                  placeholder="e.g., sugar, milk, cocoa"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="health_rating">Health Rating</Label>
+                <Select
+                  value={formData.health_rating}
+                  onValueChange={(value) => setFormData({ ...formData, health_rating: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select rating (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="calories">Calories</Label>
+                  <Input id="calories" type="number" min="0" step="1" value={formData.calories} onChange={(e) => setFormData({ ...formData, calories: e.target.value })} placeholder="kcal" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fat">Fat (g)</Label>
+                  <Input id="fat" type="number" min="0" step="0.1" value={formData.fat} onChange={(e) => setFormData({ ...formData, fat: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="carbs">Carbs (g)</Label>
+                  <Input id="carbs" type="number" min="0" step="0.1" value={formData.carbs} onChange={(e) => setFormData({ ...formData, carbs: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="protein">Protein (g)</Label>
+                  <Input id="protein" type="number" min="0" step="0.1" value={formData.protein} onChange={(e) => setFormData({ ...formData, protein: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sodium">Sodium (mg)</Label>
+                  <Input id="sodium" type="number" min="0" step="1" value={formData.sodium} onChange={(e) => setFormData({ ...formData, sodium: e.target.value })} />
                 </div>
               </div>
               <div className="flex justify-end space-x-2">
