@@ -16,25 +16,46 @@ export type Database = {
     Tables: {
       products: {
         Row: {
+          calories: number | null
+          carbs: number | null
           created_at: string
+          fat: number | null
+          health_rating: number | null
           id: string
           image_url: string | null
+          ingredients: string | null
           name: string
           price: number
+          protein: number | null
+          sodium: number | null
         }
         Insert: {
+          calories?: number | null
+          carbs?: number | null
           created_at?: string
+          fat?: number | null
+          health_rating?: number | null
           id?: string
           image_url?: string | null
+          ingredients?: string | null
           name: string
           price: number
+          protein?: number | null
+          sodium?: number | null
         }
         Update: {
+          calories?: number | null
+          carbs?: number | null
           created_at?: string
+          fat?: number | null
+          health_rating?: number | null
           id?: string
           image_url?: string | null
+          ingredients?: string | null
           name?: string
           price?: number
+          protein?: number | null
+          sodium?: number | null
         }
         Relationships: []
       }
