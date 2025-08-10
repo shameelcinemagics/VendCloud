@@ -396,18 +396,18 @@ const Planogram = () => {
                 <p className="text-muted-foreground">No slots configured for this machine. Add your first slot to get started.</p>
               </div>
             ) : (
-              <div className="h-full overflow-auto p-8">
+              <div className="h-full overflow-x-auto overflow-y-auto p-8">
                 <div className="text-center text-lg text-muted-foreground mb-6">
                   Planogram Layout: 10 Columns × 6 Rows (60 Slots Total)
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 lg:grid-cols-10 gap-6 justify-items-center mx-auto w-full">
+                <div className="grid grid-cols-[repeat(10,22rem)] gap-6 w-max">
                   {createGridLayout().map((slot, index) => {
                     const slotNumber = index + 1;
                     const row = Math.floor(index / 10) + 1;
                     const col = (index % 10) + 1;
                     
                     return (
-                      <Card key={slotNumber} className="relative w-80 h-96">
+                      <Card key={slotNumber} className="relative w-full h-[28rem]">
                         <CardContent className="p-4 h-full flex flex-col">
                           <div className="flex justify-between items-center mb-2">
                             <Badge variant="outline" className="text-base font-medium">{slotNumber}</Badge>
@@ -438,7 +438,7 @@ const Planogram = () => {
                                 <img 
                                   src={slot.products.image_url} 
                                   alt={slot.products.name}
-                                  className="w-48 h-48 object-cover rounded-lg mx-auto"
+                                  className="w-64 h-64 object-cover rounded-lg mx-auto"
                                 />
                               )}
                               <div className="text-base font-medium truncate w-full">
