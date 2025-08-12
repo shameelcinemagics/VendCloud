@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Grid3X3, Plus, Edit, Save, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { formatKWD } from '@/lib/currency';
+import MachineProductsManager from '@/components/MachineProductsManager';
 
 interface VendingMachine {
   id: string;
@@ -34,6 +36,14 @@ interface Slot {
   products?: Product;
 }
 
+interface MachineProduct {
+  id: string;
+  product_id: string;
+  price: number;
+  active: boolean;
+  products?: { id: string; name: string; image_url?: string | null };
+}
+
 const Planogram = () => {
   const [machines, setMachines] = useState<VendingMachine[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -49,17 +59,19 @@ const Planogram = () => {
     max_capacity: '10'
   });
   const { toast } = useToast();
+  const [machineProducts, setMachineProducts] = useState<MachineProduct[]>([]);
 
   useEffect(() => {
     fetchMachines();
     fetchProducts();
   }, []);
 
-  useEffect(() => {
-    if (selectedMachine) {
-      fetchSlots();
-    }
-  }, [selectedMachine]);
+useEffect(() => {
+  if (selectedMachine) {
+    fetchSlots();
+    fetchMachineProducts();
+  }
+}, [selectedMachine]);
 
   const fetchMachines = async () => {
     try {
@@ -75,18 +87,42 @@ const Planogram = () => {
     }
   };
 
-  const fetchProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name, price, image_url');
+const fetchProducts = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, name, price, image_url');
 
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    }
-  };
+    if (error) throw error;
+    setProducts(data || []);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+  }
+};
+
+const fetchMachineProducts = async () => {
+  if (!selectedMachine) return;
+  try {
+    const { data, error } = await supabase
+      .from('machine_products')
+      .select(`
+        id,
+        product_id,
+        price,
+        active,
+        products (
+          id,
+          name,
+          image_url
+        )
+      `)
+      .eq('vending_machine_id', selectedMachine);
+    if (error) throw error;
+    setMachineProducts(data || []);
+  } catch (error) {
+    console.error('Error fetching machine products:', error);
+  }
+};
 
   const fetchSlots = async () => {
     if (!selectedMachine) return;

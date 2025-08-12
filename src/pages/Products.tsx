@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { formatKWD } from '@/lib/currency';
 
 interface Product {
   id: string;
@@ -259,15 +260,15 @@ const resetForm = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="price">Price ($)</Label>
+                <Label htmlFor="price">Price (KWD)</Label>
                 <Input
                   id="price"
                   type="number"
-                  step="0.01"
+                  step="0.001"
                   min="0"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
+                  placeholder="0.000"
                   required
                 />
               </div>
