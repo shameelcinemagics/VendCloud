@@ -68,10 +68,71 @@ const Planogram = () => {
 
 useEffect(() => {
   if (selectedMachine) {
-    fetchSlots();
+    initializeSlots();
     fetchMachineProducts();
   }
 }, [selectedMachine]);
+
+const initializeSlots = async () => {
+  if (!selectedMachine) return;
+  
+  setLoading(true);
+  try {
+    // First fetch existing slots
+    const { data: existingSlots, error: fetchError } = await supabase
+      .from('slots')
+      .select(`
+        *,
+        products (
+          id,
+          name,
+          price,
+          image_url
+        )
+      `)
+      .eq('vending_machine_id', selectedMachine)
+      .order('slot_number');
+
+    if (fetchError) throw fetchError;
+
+    // Create slots 1-60 if they don't exist
+    const existingSlotNumbers = new Set((existingSlots || []).map(slot => slot.slot_number));
+    const slotsToCreate = [];
+    
+    for (let i = 1; i <= 60; i++) {
+      if (!existingSlotNumbers.has(i)) {
+        slotsToCreate.push({
+          vending_machine_id: selectedMachine,
+          slot_number: i,
+          product_id: null,
+          quantity: 0,
+          max_capacity: 10
+        });
+      }
+    }
+
+    // Insert missing slots
+    if (slotsToCreate.length > 0) {
+      const { error: insertError } = await supabase
+        .from('slots')
+        .insert(slotsToCreate);
+      
+      if (insertError) throw insertError;
+    }
+
+    // Fetch all slots again after initialization
+    fetchSlots();
+  } catch (error) {
+    console.error('Error initializing slots:', error);
+    toast({
+      title: "Error",
+      description: "Failed to initialize machine slots",
+      variant: "destructive"
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const fetchMachines = async () => {
     try {
@@ -225,64 +286,53 @@ const fetchMachineProducts = async () => {
   };
 
   const handleDelete = async (slotId: string) => {
-    if (!confirm('Are you sure you want to delete this slot?')) return;
+    if (!confirm('Are you sure you want to clear this slot?')) return;
 
     try {
+      // Clear the slot instead of deleting it
       const { error } = await supabase
         .from('slots')
-        .delete()
+        .update({
+          product_id: null,
+          quantity: 0
+        })
         .eq('id', slotId);
 
       if (error) throw error;
       
       toast({
         title: "Success",
-        description: "Slot deleted successfully"
+        description: "Slot cleared successfully"
       });
       fetchSlots();
     } catch (error) {
-      console.error('Error deleting slot:', error);
+      console.error('Error clearing slot:', error);
       toast({
         title: "Error",
-        description: "Failed to delete slot",
+        description: "Failed to clear slot",
         variant: "destructive"
       });
     }
   };
 
   const getNextSlotNumber = () => {
-    if (slots.length === 0) return '1';
-    
-    // Find the first available slot number (1-60)
-    for (let i = 1; i <= 60; i++) {
-      if (!slots.find(slot => slot.slot_number === i)) {
-        return i.toString();
-      }
-    }
-    
-    // If all 60 slots are taken, return the next number
-    return '61';
+    // All slots 1-60 should already exist, just return the first empty one for editing
+    const emptySlot = slots.find(slot => !slot.product_id);
+    return emptySlot ? emptySlot.slot_number.toString() : '1';
   };
 
   const handleAddSlot = () => {
-    const nextSlot = getNextSlotNumber();
-    if (parseInt(nextSlot) > 60) {
+    const emptySlot = slots.find(slot => !slot.product_id);
+    if (!emptySlot) {
       toast({
-        title: "Maximum slots reached",
-        description: "This machine already has 60 slots (maximum capacity)",
+        title: "No empty slots",
+        description: "All 60 slots are currently occupied",
         variant: "destructive"
       });
       return;
     }
     
-    setEditingSlot(null);
-    setFormData({ 
-      slot_number: nextSlot, 
-      product_id: '', 
-      quantity: '0', 
-      max_capacity: '10' 
-    });
-    setIsDialogOpen(true);
+    handleEdit(emptySlot);
   };
 
   // Create a dynamic grid layout based on existing slots
@@ -426,67 +476,64 @@ const fetchMachineProducts = async () => {
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-            ) : slots.length === 0 ? (
-              <div className="text-center py-8">
-                <Grid3X3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No slots configured for this machine. Add your first slot to get started.</p>
-              </div>
             ) : (
               <div className="h-full overflow-x-auto overflow-y-auto p-8">
                 <div className="text-center text-lg text-muted-foreground mb-6">
-                  Configured Slots ({slots.length} total)
+                  Machine Slots (60 total, {slots.filter(s => s.product_id).length} occupied)
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
                   {createGridLayout().map((slot) => (
-                    <Card key={slot.id} className="relative w-full h-[28rem]">
-                      <CardContent className="p-4 h-full flex flex-col">
+                    <Card key={slot.id} className={`relative w-full h-64 ${!slot.product_id ? 'border-dashed border-2 opacity-60' : ''}`}>
+                      <CardContent className="p-3 h-full flex flex-col">
                         <div className="flex justify-between items-center mb-2">
-                          <Badge variant="outline" className="text-base font-medium">{slot.slot_number}</Badge>
+                          <Badge variant="outline" className="text-sm font-medium">{slot.slot_number}</Badge>
                           <div className="flex gap-1">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0"
+                              className="h-6 w-6 p-0"
                               onClick={() => handleEdit(slot)}
                             >
-                              <Edit className="h-5 w-5" />
+                              <Edit className="h-3 w-3" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => handleDelete(slot.id)}
-                            >
-                              <Trash2 className="h-5 w-5" />
-                            </Button>
+                            {slot.product_id && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => handleDelete(slot.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                         {slot?.product_id && slot.products ? (
-                          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3">
+                          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
                             {slot.products.image_url && (
                               <img 
                                 src={slot.products.image_url} 
                                 alt={slot.products.name}
-                                className="w-32 h-32 object-cover rounded-lg mx-auto"
+                                className="w-16 h-16 object-cover rounded-lg mx-auto"
                               />
                             )}
-                            <div className="text-base font-medium truncate w-full">
+                            <div className="text-sm font-medium truncate w-full px-1">
                               {slot.products.name}
                             </div>
-                            <div className="text-base text-muted-foreground">
+                            <div className="text-sm text-muted-foreground">
                               {(() => {
                                 const machineProduct = machineProducts.find(mp => mp.product_id === slot.product_id);
                                 return machineProduct ? formatKWD(machineProduct.price) : formatKWD(slot.products.price);
                               })()}
                             </div>
-                            <div className="text-base">
+                            <div className="text-sm">
                               <span className={slot.quantity === 0 ? 'text-destructive' : 'text-green-600'}>
                                 {slot.quantity}/{slot.max_capacity}
                               </span>
                             </div>
-                            <div className="w-full bg-muted rounded-full h-3">
+                            <div className="w-full bg-muted rounded-full h-2">
                               <div
-                                className="bg-primary h-3 rounded-full transition-all"
+                                className="bg-primary h-2 rounded-full transition-all"
                                 style={{
                                   width: `${(slot.quantity / slot.max_capacity) * 100}%`,
                                 }}
@@ -496,7 +543,7 @@ const fetchMachineProducts = async () => {
                         ) : (
                           <div className="flex-1 flex items-center justify-center">
                             <div className="text-center">
-                              <div className="text-base text-muted-foreground">Empty Slot</div>
+                              <div className="text-sm text-muted-foreground">Empty</div>
                             </div>
                           </div>
                         )}
