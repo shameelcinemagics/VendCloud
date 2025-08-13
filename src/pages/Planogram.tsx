@@ -500,40 +500,40 @@ const fetchMachineProducts = async () => {
                       <div className="text-sm text-muted-foreground font-medium">
                         Row {rowIndex + 1} ({row.length} slots)
                       </div>
-                      <div className={`grid gap-4 ${row.length === 5 ? 'grid-cols-5' : 'grid-cols-10'}`}>
+                      <div className={`grid gap-6 ${row.length === 5 ? 'grid-cols-5' : 'grid-cols-10'}`}>
                         {row.map((slot) => (
-                          <Card key={slot.id} className={`relative w-full h-64 ${!slot.product_id ? 'border-dashed border-2 opacity-60' : ''}`}>
-                            <CardContent className="p-3 h-full flex flex-col">
-                              <div className="flex justify-between items-center mb-2">
+                          <Card key={slot.id} className={`relative w-full h-80 ${!slot.product_id ? 'border-dashed border-2 opacity-60' : ''}`}>
+                            <CardContent className="p-4 h-full flex flex-col">
+                              <div className="flex justify-between items-center mb-3">
                                 <Badge variant="outline" className="text-sm font-medium">{slot.slot_number}</Badge>
                                 <div className="flex gap-1">
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 w-6 p-0"
+                                    className="h-7 w-7 p-0"
                                     onClick={() => handleEdit(slot)}
                                   >
-                                    <Edit className="h-3 w-3" />
+                                    <Edit className="h-4 w-4" />
                                   </Button>
                                   {slot.product_id && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="h-6 w-6 p-0"
+                                      className="h-7 w-7 p-0"
                                       onClick={() => handleDelete(slot.id)}
                                     >
-                                      <Trash2 className="h-3 w-3" />
+                                      <Trash2 className="h-4 w-4" />
                                     </Button>
                                   )}
                                 </div>
                               </div>
                               {slot?.product_id && slot.products ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
+                                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3">
                                   {slot.products.image_url && (
                                     <img 
                                       src={slot.products.image_url} 
                                       alt={slot.products.name}
-                                      className="w-16 h-16 object-cover rounded-lg mx-auto"
+                                      className="w-24 h-24 object-cover rounded-lg mx-auto"
                                     />
                                   )}
                                   <div className="text-sm font-medium truncate w-full px-1">

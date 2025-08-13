@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Machines from "./pages/Machines";
+import BulkAssignment from "./pages/BulkAssignment";
 import Planogram from "./pages/Planogram";
 import Stock from "./pages/Stock";
 import Sales from "./pages/Sales";
@@ -60,6 +61,18 @@ const App = () => (
                     <AppSidebar />
                     <main className="flex-1">
                       <Machines />
+                    </main>
+                  </div>
+                </SidebarProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/bulk-assignment" element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <div className="min-h-screen flex w-full">
+                    <AppSidebar />
+                    <main className="flex-1">
+                      <BulkAssignment />
                     </main>
                   </div>
                 </SidebarProvider>

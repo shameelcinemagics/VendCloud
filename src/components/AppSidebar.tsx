@@ -5,7 +5,8 @@ import {
   BarChart3, 
   TrendingUp, 
   LogOut,
-  Settings
+  Settings,
+  ListChecks
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,6 +29,7 @@ const menuItems = [
   { title: 'Dashboard', url: '/dashboard', icon: BarChart3 },
   { title: 'Products', url: '/products', icon: Package },
   { title: 'Vending Machines', url: '/machines', icon: Monitor },
+  { title: 'Bulk Assignment', url: '/bulk-assignment', icon: ListChecks },
   { title: 'Planogram', url: '/planogram', icon: Grid3X3 },
   { title: 'Stock Overview', url: '/stock', icon: TrendingUp },
   { title: 'Sales Logs', url: '/sales', icon: BarChart3 },
