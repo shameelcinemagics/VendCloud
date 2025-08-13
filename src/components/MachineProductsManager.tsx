@@ -52,7 +52,7 @@ export default function MachineProductsManager({ machineId, onChanged }: Props) 
     try {
       const [{ data: mp, error: mpErr }, { data: prod, error: prodErr }] = await Promise.all([
         supabase
-          .from('machine_products')
+          .from('machine_products' as any)
           .select('id, product_id, price, active, products ( id, name, image_url )')
           .eq('vending_machine_id', machineId)
           .order('product_id'),
@@ -64,7 +64,7 @@ export default function MachineProductsManager({ machineId, onChanged }: Props) 
 
       if (mpErr) throw mpErr;
       if (prodErr) throw prodErr;
-      setAssignments(mp || []);
+      setAssignments((mp || []) as unknown as Assignment[]);
       setProducts(prod || []);
     } catch (e) {
       console.error(e);
@@ -81,7 +81,7 @@ export default function MachineProductsManager({ machineId, onChanged }: Props) 
         toast({ title: 'Missing data', description: 'Choose a product and enter a valid price', variant: 'destructive' });
         return;
       }
-      const { error } = await supabase.from('machine_products').insert([
+      const { error } = await supabase.from('machine_products' as any).insert([
         { vending_machine_id: machineId, product_id: addingProductId, price: priceNum, active: true }
       ]);
       if (error) throw error;
@@ -100,7 +100,7 @@ export default function MachineProductsManager({ machineId, onChanged }: Props) 
     try {
       const priceNum = parseFloat(newPrice);
       if (isNaN(priceNum)) return;
-      const { error } = await supabase.from('machine_products').update({ price: priceNum }).eq('id', id);
+      const { error } = await supabase.from('machine_products' as any).update({ price: priceNum }).eq('id', id);
       if (error) throw error;
       toast({ title: 'Saved', description: 'Price updated' });
       await loadData();
@@ -113,7 +113,7 @@ export default function MachineProductsManager({ machineId, onChanged }: Props) 
 
   async function handleDelete(id: string) {
     try {
-      const { error } = await supabase.from('machine_products').delete().eq('id', id);
+      const { error } = await supabase.from('machine_products' as any).delete().eq('id', id);
       if (error) throw error;
       toast({ title: 'Removed', description: 'Product removed from machine' });
       await loadData();
