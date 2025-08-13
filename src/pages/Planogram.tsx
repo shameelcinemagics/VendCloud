@@ -60,6 +60,9 @@ const Planogram = () => {
   });
   const { toast } = useToast();
   const [machineProducts, setMachineProducts] = useState<MachineProduct[]>([]);
+  const [isPricingDialogOpen, setIsPricingDialogOpen] = useState(false);
+  const [selectedProductForPricing, setSelectedProductForPricing] = useState<string>('');
+  const [customPrice, setCustomPrice] = useState<string>('');
 
   useEffect(() => {
     fetchMachines();
@@ -335,6 +338,75 @@ const fetchMachineProducts = async () => {
     handleEdit(emptySlot);
   };
 
+  const handlePricingUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedProductForPricing || !customPrice || !selectedMachine) {
+      toast({
+        title: "Invalid Input",
+        description: "Please select a product and enter a price",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const price = parseFloat(customPrice);
+      if (isNaN(price) || price <= 0) {
+        throw new Error('Invalid price');
+      }
+
+      // Check if machine product already exists
+      const existingMachineProduct = machineProducts.find(mp => mp.product_id === selectedProductForPricing);
+      
+      if (existingMachineProduct) {
+        // Update existing machine product
+        const { error } = await supabase
+          .from('machine_products' as any)
+          .update({ price })
+          .eq('id', existingMachineProduct.id);
+        
+        if (error) throw error;
+      } else {
+        // Create new machine product
+        const { error } = await supabase
+          .from('machine_products' as any)
+          .insert({
+            vending_machine_id: selectedMachine,
+            product_id: selectedProductForPricing,
+            price,
+            active: true
+          });
+        
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Product price updated successfully"
+      });
+
+      setIsPricingDialogOpen(false);
+      setSelectedProductForPricing('');
+      setCustomPrice('');
+      await fetchMachineProducts();
+      
+    } catch (error) {
+      console.error('Error updating price:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update product price",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openPricingDialog = () => {
+    setSelectedProductForPricing('');
+    setCustomPrice('');
+    setIsPricingDialogOpen(true);
+  };
+
   // Create a dynamic grid layout based on existing slots
   const createGridLayout = () => {
     const sortedSlots = slots.sort((a, b) => a.slot_number - b.slot_number);
@@ -385,10 +457,16 @@ const fetchMachineProducts = async () => {
               </Select>
             </div>
             {selectedMachine && (
-              <Button onClick={handleAddSlot} className="ml-4">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Slot
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleAddSlot}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Slot
+                </Button>
+                <Button onClick={openPricingDialog} variant="outline">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Manage Pricing
+                </Button>
+              </div>
             )}
           </div>
 
@@ -464,6 +542,69 @@ const fetchMachineProducts = async () => {
                   <Button type="submit">
                     <Save className="h-4 w-4 mr-2" />
                     {editingSlot ? 'Update' : 'Create'}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Pricing Dialog */}
+          <Dialog open={isPricingDialogOpen} onOpenChange={setIsPricingDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Manage Product Pricing</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handlePricingUpdate} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pricing_product">Product</Label>
+                  <Select 
+                    value={selectedProductForPricing} 
+                    onValueChange={(value) => {
+                      setSelectedProductForPricing(value);
+                      // Set current price if machine product exists
+                      const existingMachineProduct = machineProducts.find(mp => mp.product_id === value);
+                      if (existingMachineProduct) {
+                        setCustomPrice(existingMachineProduct.price.toString());
+                      } else {
+                        const product = products.find(p => p.id === value);
+                        if (product) {
+                          setCustomPrice(product.price.toString());
+                        }
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name} - {formatKWD(product.price)} (base)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="custom_price">Custom Price for This Machine</Label>
+                  <Input
+                    id="custom_price"
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    value={customPrice}
+                    onChange={(e) => setCustomPrice(e.target.value)}
+                    placeholder="Enter custom price"
+                    required
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsPricingDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Price
                   </Button>
                 </div>
               </form>

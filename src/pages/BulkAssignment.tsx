@@ -29,6 +29,7 @@ const BulkAssignment = () => {
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [selectedMachines, setSelectedMachines] = useState<string[]>([]);
   const [slots, setSlots] = useState<any[]>([]);
+  const [assignedMachines, setAssignedMachines] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -37,6 +38,15 @@ const BulkAssignment = () => {
     fetchMachines();
     fetchSlots();
   }, []);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      updateAssignedMachines();
+    } else {
+      setAssignedMachines([]);
+      setSelectedMachines([]);
+    }
+  }, [selectedProduct, slots]);
 
   const fetchProducts = async () => {
     try {
@@ -110,11 +120,20 @@ const BulkAssignment = () => {
     return products.find(p => p.id === selectedProduct);
   };
 
+  const updateAssignedMachines = () => {
+    const assigned = machines
+      .filter(machine => 
+        slots.some(slot => 
+          slot.product_id === selectedProduct && 
+          slot.vending_machine_id === machine.id
+        )
+      )
+      .map(machine => machine.id);
+    setAssignedMachines(assigned);
+  };
+
   const isMachineAssigned = (machineId: string) => {
-    return slots.some(slot => 
-      slot.product_id === selectedProduct && 
-      slot.vending_machine_id === machineId
-    );
+    return assignedMachines.includes(machineId);
   };
 
   const handleBulkAssignment = async () => {
@@ -132,37 +151,62 @@ const BulkAssignment = () => {
       const product = getSelectedProduct();
       if (!product) throw new Error('Product not found');
 
-      // Update slots to assign the selected product to empty slots in selected machines
-      for (const machineId of selectedMachines) {
-        // Find empty slots for this machine
+      const machinesToAssign = selectedMachines.filter(id => !assignedMachines.includes(id));
+      const machinesToUnassign = selectedMachines.filter(id => assignedMachines.includes(id));
+
+      // Assign to new machines
+      for (const machineId of machinesToAssign) {
         const machineSlots = slots
           .filter(slot => slot.vending_machine_id === machineId && !slot.product_id)
-          .slice(0, 1); // Assign to first empty slot
+          .slice(0, 1);
 
         if (machineSlots.length > 0) {
           await supabase
             .from('slots')
             .update({ 
               product_id: selectedProduct,
-              quantity: 5  // Default quantity
+              quantity: 5
             })
             .eq('id', machineSlots[0].id);
         }
       }
 
+      // Unassign from selected assigned machines
+      for (const machineId of machinesToUnassign) {
+        await supabase
+          .from('slots')
+          .update({
+            product_id: null,
+            quantity: 0
+          })
+          .eq('vending_machine_id', machineId)
+          .eq('product_id', selectedProduct);
+      }
+
+      const assignCount = machinesToAssign.length;
+      const unassignCount = machinesToUnassign.length;
+      
+      let message = '';
+      if (assignCount > 0 && unassignCount > 0) {
+        message = `Product assigned to ${assignCount} machine(s) and unassigned from ${unassignCount} machine(s)`;
+      } else if (assignCount > 0) {
+        message = `Product assigned to ${assignCount} machine(s)`;
+      } else if (unassignCount > 0) {
+        message = `Product unassigned from ${unassignCount} machine(s)`;
+      }
+
       toast({
         title: "Success",
-        description: `Product assigned to ${selectedMachines.length} machine(s)`,
+        description: message,
       });
 
-      // Refresh data
       await fetchSlots();
       
     } catch (error) {
       console.error('Error in bulk assignment:', error);
       toast({
         title: "Error",
-        description: "Failed to assign product to machines",
+        description: "Failed to process assignment",
         variant: "destructive"
       });
     } finally {
@@ -286,7 +330,19 @@ const BulkAssignment = () => {
                       {selectedMachines.length} machine(s) selected
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Product will be assigned to selected machines
+                      {(() => {
+                        const toAssign = selectedMachines.filter(id => !assignedMachines.includes(id)).length;
+                        const toUnassign = selectedMachines.filter(id => assignedMachines.includes(id)).length;
+                        
+                        if (toAssign > 0 && toUnassign > 0) {
+                          return `Will assign to ${toAssign} machine(s) and unassign from ${toUnassign} machine(s)`;
+                        } else if (toAssign > 0) {
+                          return `Will assign to ${toAssign} machine(s)`;
+                        } else if (toUnassign > 0) {
+                          return `Will unassign from ${toUnassign} machine(s)`;
+                        }
+                        return '';
+                      })()}
                     </p>
                   </div>
                   <Button 
@@ -295,7 +351,7 @@ const BulkAssignment = () => {
                     className="gap-2"
                   >
                     <Save className="h-4 w-4" />
-                    {loading ? 'Assigning...' : 'Assign Product'}
+                    {loading ? 'Processing...' : 'Apply Changes'}
                   </Button>
                 </div>
               </div>
