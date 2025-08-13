@@ -337,8 +337,21 @@ const fetchMachineProducts = async () => {
 
   // Create a dynamic grid layout based on existing slots
   const createGridLayout = () => {
-    // Sort slots by slot number and return only existing slots
-    return slots.sort((a, b) => a.slot_number - b.slot_number);
+    const sortedSlots = slots.sort((a, b) => a.slot_number - b.slot_number);
+    
+    // Define the slot layout pattern
+    const rowPatterns = [
+      [1, 3, 5, 7, 9], // Row 1: 5 slots
+      [11, 12, 13, 14, 15, 16, 17, 18, 19, 20], // Row 2: 10 slots
+      [21, 23, 25, 27, 29], // Row 3: 5 slots
+      [31, 32, 33, 34, 35, 36, 37, 38, 39, 40], // Row 4: 10 slots
+      [41, 42, 43, 44, 45, 46, 47, 48, 49, 50], // Row 5: 10 slots
+      [51, 52, 53, 54, 55, 56, 57, 58, 59, 60]  // Row 6: 10 slots
+    ];
+    
+    return rowPatterns.map(rowSlots => 
+      rowSlots.map(slotNum => sortedSlots.find(slot => slot.slot_number === slotNum)).filter(Boolean)
+    ).filter(row => row.length > 0);
   };
 
   return (
@@ -481,74 +494,83 @@ const fetchMachineProducts = async () => {
                 <div className="text-center text-lg text-muted-foreground mb-6">
                   Machine Slots (60 total, {slots.filter(s => s.product_id).length} occupied)
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
-                  {createGridLayout().map((slot) => (
-                    <Card key={slot.id} className={`relative w-full h-64 ${!slot.product_id ? 'border-dashed border-2 opacity-60' : ''}`}>
-                      <CardContent className="p-3 h-full flex flex-col">
-                        <div className="flex justify-between items-center mb-2">
-                          <Badge variant="outline" className="text-sm font-medium">{slot.slot_number}</Badge>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              onClick={() => handleEdit(slot)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            {slot.product_id && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => handleDelete(slot.id)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                        {slot?.product_id && slot.products ? (
-                          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
-                            {slot.products.image_url && (
-                              <img 
-                                src={slot.products.image_url} 
-                                alt={slot.products.name}
-                                className="w-16 h-16 object-cover rounded-lg mx-auto"
-                              />
-                            )}
-                            <div className="text-sm font-medium truncate w-full px-1">
-                              {slot.products.name}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {(() => {
-                                const machineProduct = machineProducts.find(mp => mp.product_id === slot.product_id);
-                                return machineProduct ? formatKWD(machineProduct.price) : formatKWD(slot.products.price);
-                              })()}
-                            </div>
-                            <div className="text-sm">
-                              <span className={slot.quantity === 0 ? 'text-destructive' : 'text-green-600'}>
-                                {slot.quantity}/{slot.max_capacity}
-                              </span>
-                            </div>
-                            <div className="w-full bg-muted rounded-full h-2">
-                              <div
-                                className="bg-primary h-2 rounded-full transition-all"
-                                style={{
-                                  width: `${(slot.quantity / slot.max_capacity) * 100}%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex-1 flex items-center justify-center">
-                            <div className="text-center">
-                              <div className="text-sm text-muted-foreground">Empty</div>
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                <div className="space-y-4">
+                  {createGridLayout().map((row, rowIndex) => (
+                    <div key={rowIndex} className="space-y-2">
+                      <div className="text-sm text-muted-foreground font-medium">
+                        Row {rowIndex + 1} ({row.length} slots)
+                      </div>
+                      <div className={`grid gap-4 ${row.length === 5 ? 'grid-cols-5' : 'grid-cols-10'}`}>
+                        {row.map((slot) => (
+                          <Card key={slot.id} className={`relative w-full h-64 ${!slot.product_id ? 'border-dashed border-2 opacity-60' : ''}`}>
+                            <CardContent className="p-3 h-full flex flex-col">
+                              <div className="flex justify-between items-center mb-2">
+                                <Badge variant="outline" className="text-sm font-medium">{slot.slot_number}</Badge>
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => handleEdit(slot)}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  {slot.product_id && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                      onClick={() => handleDelete(slot.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              {slot?.product_id && slot.products ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
+                                  {slot.products.image_url && (
+                                    <img 
+                                      src={slot.products.image_url} 
+                                      alt={slot.products.name}
+                                      className="w-16 h-16 object-cover rounded-lg mx-auto"
+                                    />
+                                  )}
+                                  <div className="text-sm font-medium truncate w-full px-1">
+                                    {slot.products.name}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {(() => {
+                                      const machineProduct = machineProducts.find(mp => mp.product_id === slot.product_id);
+                                      return machineProduct ? formatKWD(machineProduct.price) : formatKWD(slot.products.price);
+                                    })()}
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className={slot.quantity === 0 ? 'text-destructive' : 'text-green-600'}>
+                                      {slot.quantity}/{slot.max_capacity}
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-muted rounded-full h-2">
+                                    <div
+                                      className="bg-primary h-2 rounded-full transition-all"
+                                      style={{
+                                        width: `${(slot.quantity / slot.max_capacity) * 100}%`,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex-1 flex items-center justify-center">
+                                  <div className="text-center">
+                                    <div className="text-sm text-muted-foreground">Empty</div>
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
