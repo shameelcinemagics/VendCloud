@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Grid3X3, Plus, Edit, Save, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatKWD } from '@/lib/currency';
-import MachineProductsManager from '@/components/MachineProductsManager';
+
 
 interface VendingMachine {
   id: string;
@@ -36,13 +36,6 @@ interface Slot {
   products?: Product;
 }
 
-interface MachineProduct {
-  id: string;
-  product_id: string;
-  price: number;
-  active: boolean;
-  products?: { id: string; name: string; image_url?: string | null };
-}
 
 const Planogram = () => {
   const [machines, setMachines] = useState<VendingMachine[]>([]);
@@ -59,7 +52,7 @@ const Planogram = () => {
     max_capacity: '10'
   });
   const { toast } = useToast();
-  const [machineProducts, setMachineProducts] = useState<MachineProduct[]>([]);
+  
 
   useEffect(() => {
     fetchMachines();
@@ -69,7 +62,6 @@ const Planogram = () => {
 useEffect(() => {
   if (selectedMachine) {
     initializeSlots();
-    fetchMachineProducts();
   }
 }, [selectedMachine]);
 
@@ -161,29 +153,6 @@ const fetchProducts = async () => {
   }
 };
 
-const fetchMachineProducts = async () => {
-  if (!selectedMachine) return;
-  try {
-    const { data, error } = await supabase
-      .from('machine_products' as any)
-      .select(`
-        id,
-        product_id,
-        price,
-        active,
-        products (
-          id,
-          name,
-          image_url
-        )
-      `)
-      .eq('vending_machine_id', selectedMachine);
-    if (error) throw error;
-    setMachineProducts((data || []) as unknown as MachineProduct[]);
-  } catch (error) {
-    console.error('Error fetching machine products:', error);
-  }
-};
 
   const fetchSlots = async () => {
     if (!selectedMachine) return;
@@ -476,12 +445,6 @@ const fetchMachineProducts = async () => {
         </CardContent>
       </Card>
 
-      {selectedMachine && (
-        <MachineProductsManager 
-          machineId={selectedMachine} 
-          onChanged={fetchMachineProducts}
-        />
-      )}
 
       {selectedMachine && (
         <Card>
