@@ -425,9 +425,9 @@ const fetchMachineProducts = async () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">No Product</SelectItem>
-                      {machineProducts.filter(mp => mp.active).map((mp) => (
-                        <SelectItem key={mp.product_id} value={mp.product_id}>
-                          {mp.products?.name} - {formatKWD(mp.price)}
+                      {products.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name} - {formatKWD(product.price)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -500,9 +500,9 @@ const fetchMachineProducts = async () => {
                       <div className="text-sm text-muted-foreground font-medium">
                         Row {rowIndex + 1} ({row.length} slots)
                       </div>
-                      <div className={`grid gap-6 ${row.length === 5 ? 'grid-cols-5' : 'grid-cols-10'}`}>
+                      <div className="grid gap-6 grid-cols-5 justify-center">
                         {row.map((slot) => (
-                          <Card key={slot.id} className={`relative w-full h-80 ${!slot.product_id ? 'border-dashed border-2 opacity-60' : ''}`}>
+                          <Card key={slot.id} className={`relative w-full h-[28rem] ${!slot.product_id ? 'border-dashed border-2 opacity-60' : ''}`}>
                             <CardContent className="p-4 h-full flex flex-col">
                               <div className="flex justify-between items-center mb-3">
                                 <Badge variant="outline" className="text-sm font-medium">{slot.slot_number}</Badge>
@@ -533,7 +533,7 @@ const fetchMachineProducts = async () => {
                                     <img 
                                       src={slot.products.image_url} 
                                       alt={slot.products.name}
-                                      className="w-24 h-24 object-cover rounded-lg mx-auto"
+                                      className="w-40 h-40 object-cover rounded-lg mx-auto"
                                     />
                                   )}
                                   <div className="text-sm font-medium truncate w-full px-1">
