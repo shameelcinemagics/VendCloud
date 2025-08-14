@@ -19,6 +19,7 @@ interface Product {
   price: number;
   image_url?: string;
   created_at: string;
+  category?: string | null;
   ingredients?: string | null;
   health_rating?: number | null;
   calories?: number | null;
@@ -37,6 +38,7 @@ const [formData, setFormData] = useState({
   name: '',
   price: '',
   image_url: '',
+  category: '',
   ingredients: '',
   health_rating: '',
   calories: '',
@@ -122,6 +124,7 @@ const [formData, setFormData] = useState({
         name: formData.name,
         price: parseFloat(formData.price),
         image_url: imageUrl || null,
+        category: formData.category || null,
         ingredients: formData.ingredients || null,
         health_rating: formData.health_rating === '' ? null : parseInt(formData.health_rating),
         calories: toNum(formData.calories),
@@ -176,6 +179,7 @@ const [formData, setFormData] = useState({
     name: product.name,
     price: product.price.toString(),
     image_url: product.image_url || '',
+    category: product.category || '',
     ingredients: product.ingredients || '',
     health_rating: product.health_rating?.toString() || '',
     calories: product.calories?.toString() || '',
@@ -214,7 +218,7 @@ const [formData, setFormData] = useState({
   };
 
 const resetForm = () => {
-  setFormData({ name: '', price: '', image_url: '', ingredients: '', health_rating: '', calories: '', fat: '', carbs: '', protein: '', sodium: '' });
+  setFormData({ name: '', price: '', image_url: '', category: '', ingredients: '', health_rating: '', calories: '', fat: '', carbs: '', protein: '', sodium: '' });
   setEditingProduct(null);
   setSelectedFile(null);
 };
@@ -271,6 +275,30 @@ const resetForm = () => {
                   placeholder="0.000"
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="snacks">Snacks</SelectItem>
+                    <SelectItem value="beverages">Beverages</SelectItem>
+                    <SelectItem value="candy">Candy</SelectItem>
+                    <SelectItem value="water">Water</SelectItem>
+                    <SelectItem value="energy">Energy</SelectItem>
+                    <SelectItem value="sports">Sports</SelectItem>
+                    <SelectItem value="healthy">Healthy</SelectItem>
+                    <SelectItem value="nuts">Nuts</SelectItem>
+                    <SelectItem value="cookies">Cookies</SelectItem>
+                    <SelectItem value="spreads">Spreads</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 <div className="space-y-2">
                 <Label>Product Image</Label>
@@ -381,6 +409,7 @@ const resetForm = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Image</TableHead>
                   <TableHead>Created</TableHead>
@@ -391,6 +420,15 @@ const resetForm = () => {
                 {products.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell>
+                      {product.category ? (
+                        <Badge variant="outline" className="capitalize">
+                          {product.category}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary">${product.price.toFixed(2)}</Badge>
                     </TableCell>

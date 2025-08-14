@@ -7,17 +7,70 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
+      machine_products: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          price: number
+          product_id: string
+          updated_at: string
+          vending_machine_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          price: number
+          product_id: string
+          updated_at?: string
+          vending_machine_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          price?: number
+          product_id?: string
+          updated_at?: string
+          vending_machine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_machine_products_machine"
+            columns: ["vending_machine_id"]
+            isOneToOne: false
+            referencedRelation: "machine_stock"
+            referencedColumns: ["vending_machine_id"]
+          },
+          {
+            foreignKeyName: "fk_machine_products_machine"
+            columns: ["vending_machine_id"]
+            isOneToOne: false
+            referencedRelation: "vending_machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_machine_products_product"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           calories: number | null
           carbs: number | null
+          category: string | null
           created_at: string
           fat: number | null
           health_rating: number | null
@@ -32,6 +85,7 @@ export type Database = {
         Insert: {
           calories?: number | null
           carbs?: number | null
+          category?: string | null
           created_at?: string
           fat?: number | null
           health_rating?: number | null
@@ -46,6 +100,7 @@ export type Database = {
         Update: {
           calories?: number | null
           carbs?: number | null
+          category?: string | null
           created_at?: string
           fat?: number | null
           health_rating?: number | null
@@ -90,6 +145,7 @@ export type Database = {
           quantity: number
           slot_number: number
           sold_at: string
+          unit_price: number | null
           vending_machine_id: string
         }
         Insert: {
@@ -98,6 +154,7 @@ export type Database = {
           quantity?: number
           slot_number: number
           sold_at?: string
+          unit_price?: number | null
           vending_machine_id: string
         }
         Update: {
@@ -106,6 +163,7 @@ export type Database = {
           quantity?: number
           slot_number?: number
           sold_at?: string
+          unit_price?: number | null
           vending_machine_id?: string
         }
         Relationships: [
