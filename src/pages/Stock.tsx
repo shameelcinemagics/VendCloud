@@ -18,7 +18,7 @@ interface StockItem {
   location: string;
   slot_number: number;
   product_name: string | null;
-  product_price: number | null;
+  product_price: string | null;
   quantity: number;
   max_capacity: number;
   slot_id: string;
@@ -58,16 +58,36 @@ const Stock = () => {
   const fetchStockData = async () => {
     setLoading(true);
     try {
-      let query = supabase.from('machine_stock').select('*');
+      let query = supabase
+        .from('slots')
+        .select(`
+          *,
+          vending_machines(machine_id, location),
+          products(name, price)
+        `);
       
       if (selectedMachine !== 'all') {
         query = query.eq('vending_machine_id', selectedMachine);
       }
 
-      const { data, error } = await query.order('machine_id').order('slot_number');
+      const { data, error } = await query.order('slot_number');
 
       if (error) throw error;
-      setStockData(data || []);
+      
+      const transformedData = (data || []).map(slot => ({
+        machine_id: slot.vending_machines?.machine_id || '',
+        location: slot.vending_machines?.location || '',
+        slot_number: slot.slot_number,
+        product_name: slot.products?.name || null,
+        product_price: slot.products?.price || null,
+        quantity: slot.quantity,
+        max_capacity: slot.max_capacity,
+        slot_id: slot.id,
+        product_id: slot.product_id,
+        vending_machine_id: slot.vending_machine_id,
+      }));
+      
+      setStockData(transformedData);
     } catch (error) {
       console.error('Error fetching stock data:', error);
     } finally {
@@ -223,7 +243,7 @@ const Stock = () => {
                         {item.product_name || <span className="text-muted-foreground">No Product</span>}
                       </TableCell>
                       <TableCell>
-                        {item.product_price ? `$${item.product_price.toFixed(2)}` : '-'}
+                        {item.product_price ? `$${Number(item.product_price).toFixed(2)}` : '-'}
                       </TableCell>
                       <TableCell>
                         <span className={item.quantity === 0 && item.product_id ? 'text-red-600' : ''}>

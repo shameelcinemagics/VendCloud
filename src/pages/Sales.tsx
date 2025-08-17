@@ -18,7 +18,7 @@ interface VendingMachine {
 interface Product {
   id: string;
   name: string;
-  price: number;
+  price: string;
 }
 
 interface Sale {
@@ -105,7 +105,7 @@ const Sales = () => {
   const getSalesStats = () => {
     const totalSales = sales.reduce((sum, sale) => sum + sale.quantity, 0);
     const totalRevenue = sales.reduce((sum, sale) => {
-      const productPrice = sale.products?.price || 0;
+      const productPrice = Number(sale.products?.price || 0);
       return sum + (productPrice * sale.quantity);
     }, 0);
     const uniqueProducts = new Set(sales.map(sale => sale.product_id)).size;
@@ -246,7 +246,7 @@ const Sales = () => {
               </TableHeader>
               <TableBody>
                 {sales.map((sale) => {
-                  const unitPrice = sale.products?.price || 0;
+                  const unitPrice = Number(sale.products?.price || 0);
                   const total = unitPrice * sale.quantity;
                   
                   return (

@@ -47,13 +47,6 @@ export type Database = {
             foreignKeyName: "fk_machine_products_machine"
             columns: ["vending_machine_id"]
             isOneToOne: false
-            referencedRelation: "machine_stock"
-            referencedColumns: ["vending_machine_id"]
-          },
-          {
-            foreignKeyName: "fk_machine_products_machine"
-            columns: ["vending_machine_id"]
-            isOneToOne: false
             referencedRelation: "vending_machines"
             referencedColumns: ["id"]
           },
@@ -78,7 +71,7 @@ export type Database = {
           image_url: string | null
           ingredients: string | null
           name: string
-          price: number
+          price: string
           protein: number | null
           sodium: number | null
         }
@@ -93,7 +86,7 @@ export type Database = {
           image_url?: string | null
           ingredients?: string | null
           name: string
-          price: number
+          price: string
           protein?: number | null
           sodium?: number | null
         }
@@ -108,7 +101,7 @@ export type Database = {
           image_url?: string | null
           ingredients?: string | null
           name?: string
-          price?: number
+          price?: string
           protein?: number | null
           sodium?: number | null
         }
@@ -178,13 +171,6 @@ export type Database = {
             foreignKeyName: "sales_vending_machine_id_fkey"
             columns: ["vending_machine_id"]
             isOneToOne: false
-            referencedRelation: "machine_stock"
-            referencedColumns: ["vending_machine_id"]
-          },
-          {
-            foreignKeyName: "sales_vending_machine_id_fkey"
-            columns: ["vending_machine_id"]
-            isOneToOne: false
             referencedRelation: "vending_machines"
             referencedColumns: ["id"]
           },
@@ -230,13 +216,6 @@ export type Database = {
             foreignKeyName: "slots_vending_machine_id_fkey"
             columns: ["vending_machine_id"]
             isOneToOne: false
-            referencedRelation: "machine_stock"
-            referencedColumns: ["vending_machine_id"]
-          },
-          {
-            foreignKeyName: "slots_vending_machine_id_fkey"
-            columns: ["vending_machine_id"]
-            isOneToOne: false
             referencedRelation: "vending_machines"
             referencedColumns: ["id"]
           },
@@ -268,29 +247,7 @@ export type Database = {
       }
     }
     Views: {
-      machine_stock: {
-        Row: {
-          location: string | null
-          machine_id: string | null
-          max_capacity: number | null
-          product_id: string | null
-          product_name: string | null
-          product_price: number | null
-          quantity: number | null
-          slot_id: string | null
-          slot_number: number | null
-          vending_machine_id: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "slots_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never

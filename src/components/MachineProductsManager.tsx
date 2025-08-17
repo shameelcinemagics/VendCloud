@@ -12,7 +12,7 @@ import { formatKWD } from '@/lib/currency';
 interface Assignment {
   id: string;
   product_id: string;
-  price: number;
+  price: string;
   active: boolean;
   products?: { id: string; name: string; image_url?: string | null };
 }
@@ -21,7 +21,7 @@ interface Product {
   id: string;
   name: string;
   image_url?: string | null;
-  price: number;
+  price: string;
 }
 
 interface Props {
@@ -76,13 +76,12 @@ export default function MachineProductsManager({ machineId, onChanged }: Props) 
 
   async function handleAdd() {
     try {
-      const priceNum = parseFloat(addingPrice);
-      if (!addingProductId || isNaN(priceNum)) {
+      if (!addingProductId || !addingPrice || addingPrice.trim() === '') {
         toast({ title: 'Missing data', description: 'Choose a product and enter a valid price', variant: 'destructive' });
         return;
       }
       const { error } = await supabase.from('machine_products' as any).insert([
-        { vending_machine_id: machineId, product_id: addingProductId, price: priceNum, active: true }
+        { vending_machine_id: machineId, product_id: addingProductId, price: addingPrice, active: true }
       ]);
       if (error) throw error;
       toast({ title: 'Added', description: 'Product assigned to machine' });
@@ -98,9 +97,8 @@ export default function MachineProductsManager({ machineId, onChanged }: Props) 
 
   async function handleUpdatePrice(id: string, newPrice: string) {
     try {
-      const priceNum = parseFloat(newPrice);
-      if (isNaN(priceNum)) return;
-      const { error } = await supabase.from('machine_products' as any).update({ price: priceNum }).eq('id', id);
+      if (!newPrice || newPrice.trim() === '') return;
+      const { error } = await supabase.from('machine_products' as any).update({ price: newPrice }).eq('id', id);
       if (error) throw error;
       toast({ title: 'Saved', description: 'Price updated' });
       await loadData();
@@ -181,7 +179,7 @@ export default function MachineProductsManager({ machineId, onChanged }: Props) 
                     type="number"
                     step="0.001"
                     min="0"
-                    defaultValue={a.price.toFixed(3)}
+                    defaultValue={a.price}
                     onBlur={(e) => handleUpdatePrice(a.id, e.target.value)}
                     className="w-32"
                   />

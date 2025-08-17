@@ -16,7 +16,7 @@ import { formatKWD } from '@/lib/currency';
 interface Product {
   id: string;
   name: string;
-  price: number;
+  price: string;
   image_url?: string;
   created_at: string;
   category?: string | null;
@@ -122,7 +122,7 @@ const [formData, setFormData] = useState({
       const toNum = (v: string) => (v === '' ? null : Number(v));
       const productData = {
         name: formData.name,
-        price: parseFloat(formData.price),
+        price: formData.price, // Store as text to preserve decimal format
         image_url: imageUrl || null,
         category: formData.category || null,
         ingredients: formData.ingredients || null,
@@ -177,7 +177,7 @@ const [formData, setFormData] = useState({
     setEditingProduct(product);
   setFormData({
     name: product.name,
-    price: product.price.toString(),
+    price: product.price,
     image_url: product.image_url || '',
     category: product.category || '',
     ingredients: product.ingredients || '',
