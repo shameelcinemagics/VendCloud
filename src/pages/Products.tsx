@@ -430,7 +430,7 @@ const resetForm = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">${product.price.toFixed(2)}</Badge>
+                      <Badge variant="secondary">{formatKWD(product.price)}</Badge>
                     </TableCell>
                     <TableCell>
                       {product.image_url ? (
