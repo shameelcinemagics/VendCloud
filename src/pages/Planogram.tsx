@@ -90,9 +90,10 @@ const initializeSlots = async () => {
     // Create slots 1-60 if they don't exist
     const existingSlotNumbers = new Set((existingSlots || []).map(slot => slot.slot_number));
     const slotsToCreate = [];
-    
+    const skipSlots = new Set([2, 4, 6, 8, 10, 22, 24, 26, 28, 30]);
+
     for (let i = 1; i <= 60; i++) {
-      if (!existingSlotNumbers.has(i)) {
+      if (!existingSlotNumbers.has(i) && !skipSlots.has(i)) {
         slotsToCreate.push({
           vending_machine_id: selectedMachine,
           slot_number: i,

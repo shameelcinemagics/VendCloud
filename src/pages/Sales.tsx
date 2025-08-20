@@ -150,7 +150,7 @@ const Sales = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{stats.totalRevenue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">Total earnings</p>
           </CardContent>
         </Card>
@@ -270,10 +270,10 @@ const Sales = () => {
                         <Badge>{sale.quantity}</Badge>
                       </TableCell>
                       <TableCell>
-                        ${unitPrice.toFixed(2)}
+                        KWD {unitPrice.toFixed(2)}
                       </TableCell>
                       <TableCell className="font-medium">
-                        ${total.toFixed(2)}
+                        KWD {total.toFixed(2)}
                       </TableCell>
                     </TableRow>
                   );

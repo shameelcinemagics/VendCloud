@@ -16,6 +16,7 @@ import { formatKWD } from '@/lib/currency';
 interface Product {
   id: string;
   name: string;
+  partNo : number;
   price: string;
   image_url?: string;
   created_at: string;
@@ -36,6 +37,7 @@ const Products = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 const [formData, setFormData] = useState({
   name: '',
+  partNo:'',
   price: '',
   image_url: '',
   category: '',
@@ -122,6 +124,7 @@ const [formData, setFormData] = useState({
       const toNum = (v: string) => (v === '' ? null : Number(v));
       const productData = {
         name: formData.name,
+        partNo:formData.partNo,
         price: formData.price, // Store as text to preserve decimal format
         image_url: imageUrl || null,
         category: formData.category || null,
@@ -167,7 +170,7 @@ const [formData, setFormData] = useState({
       console.error('Error saving product:', error);
       toast({
         title: "Error",
-        description: "Failed to save product",
+        description: error.message,
         variant: "destructive"
       });
     }
@@ -177,6 +180,7 @@ const [formData, setFormData] = useState({
     setEditingProduct(product);
   setFormData({
     name: product.name,
+    partNo:product.partNo,
     price: product.price,
     image_url: product.image_url || '',
     category: product.category || '',
@@ -218,7 +222,7 @@ const [formData, setFormData] = useState({
   };
 
 const resetForm = () => {
-  setFormData({ name: '', price: '', image_url: '', category: '', ingredients: '', health_rating: '', calories: '', fat: '', carbs: '', protein: '', sodium: '' });
+  setFormData({ name: '',partNo:'', price: '', image_url: '', category: '', ingredients: '', health_rating: '', calories: '', fat: '', carbs: '', protein: '', sodium: '' });
   setEditingProduct(null);
   setSelectedFile(null);
 };
@@ -232,7 +236,7 @@ const resetForm = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-4">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Products</h1>
@@ -248,7 +252,7 @@ const resetForm = () => {
               Add Product
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[80vh] overflow-y-auto" >
             <DialogHeader>
               <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
             </DialogHeader>
@@ -260,6 +264,19 @@ const resetForm = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Enter product name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">SKU No</Label>
+                <Input
+                  type="number"
+                  id="partNo"
+                  value={formData.partNo}
+                  onChange={(e) =>
+                    setFormData({ ...formData, partNo: e.target.value })
+                  }
+                  placeholder="Barcode"
                   required
                 />
               </div>

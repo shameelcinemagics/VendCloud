@@ -1,6 +1,7 @@
 -- Create products table
 CREATE TABLE public.products (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  partno INTEGER NOT NULL UNIQUE
   name TEXT NOT NULL,
   price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
   image_url TEXT,
