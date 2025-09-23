@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -11,9 +12,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
   const [email, setEmail] = useState('');
+  const [isEmailValid, setIsEmailValid] = useState(false);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const domain = "@cinemagic.com";
+    setIsEmailValid(email.endsWith(domain));
+  }, [email]);
 
   // Redirect if already authenticated
   if (user) {
@@ -111,12 +118,16 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full" disabled={!isEmailValid}>
                   {loading ? 'Signing Up...' : 'Sign Up'}
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
+
+          {!isEmailValid && email.length > 0 && (
+  <p className="text-sm text-red-500">Email must end with @cinemagics.com</p>
+)}
           
           {error && (
             <Alert className="mt-4">
