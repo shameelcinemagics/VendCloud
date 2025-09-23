@@ -37,7 +37,7 @@ const Sales = () => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [selectedMachine, setSelectedMachine] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>(
-    new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+    new Date().toISOString().split('T')[0]
   );
   const [dateTo, setDateTo] = useState<string>(
     new Date().toISOString().split('T')[0]
@@ -52,6 +52,53 @@ const Sales = () => {
     fetchSales();
   }, [selectedMachine, dateFrom, dateTo]);
 
+  const exportToCSV = () => {
+    if (!sales.length) return;
+  
+    const headers = [
+      "Date & Time",
+      "Machine",
+      "Location",
+      "Slot",
+      "Product",
+      "Quantity",
+      "Unit Price",
+      "Total"
+    ];
+  
+    const rows = sales.map((sale) => {
+      const date = new Date(sale.sold_at);
+      const unitPrice = Number(sale.products?.price || 0);
+      const total = unitPrice * sale.quantity;
+  
+      return [
+        `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`,
+        sale.vending_machines?.machine_id || '',
+        sale.vending_machines?.location || '',
+        sale.slot_number,
+        sale.products?.name || '',
+        sale.quantity,
+        unitPrice.toFixed(2),
+        total.toFixed(2),
+      ];
+    });
+  
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+  
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+  
+    link.setAttribute('href', url);
+    link.setAttribute('download', `sales_data_${dateFrom}_to_${dateTo}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+
   const fetchMachines = async () => {
     try {
       const { data, error } = await supabase
@@ -64,6 +111,17 @@ const Sales = () => {
       console.error('Error fetching machines:', error);
     }
   };
+
+  const getStartOfDayUTC = (date: string) => {
+    return new Date(`${date}T00:00:00`).toISOString();
+  };
+  
+  const getEndOfDayUTC = (date: string) => {
+    return new Date(`${date}T23:59:59`).toISOString();
+  };
+  
+  const fromUTC = getStartOfDayUTC(dateFrom);
+  const toUTC = getEndOfDayUTC(dateTo);
 
   const fetchSales = async () => {
     setLoading(true);
@@ -83,8 +141,8 @@ const Sales = () => {
             price
           )
         `)
-        .gte('sold_at', `${dateFrom}T00:00:00`)
-        .lte('sold_at', `${dateTo}T23:59:59`)
+        .gte('sold_at', fromUTC)
+        .lte('sold_at', toUTC)
         .order('sold_at', { ascending: false });
 
       if (selectedMachine !== 'all') {
@@ -150,7 +208,7 @@ const Sales = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">KWD {stats.totalRevenue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">Total earnings</p>
           </CardContent>
         </Card>
@@ -222,6 +280,12 @@ const Sales = () => {
                 Apply Filters
               </Button>
             </div>
+            <div className="flex items-end gap-2">
+              <Button variant="outline" onClick={exportToCSV}>
+                Export to CSV
+              </Button>
+            </div>
+
           </div>
         </CardHeader>
         <CardContent>

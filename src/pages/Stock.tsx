@@ -243,7 +243,7 @@ const Stock = () => {
                         {item.product_name || <span className="text-muted-foreground">No Product</span>}
                       </TableCell>
                       <TableCell>
-                        {item.product_price ? `$${Number(item.product_price).toFixed(2)}` : '-'}
+                        {item.product_price ? `KWD ${Number(item.product_price).toFixed(2)}` : '-'}
                       </TableCell>
                       <TableCell>
                         <span className={item.quantity === 0 && item.product_id ? 'text-red-600' : ''}>

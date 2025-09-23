@@ -398,11 +398,13 @@ const fetchProducts = async () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">No Product</SelectItem>
-                      {products.map((product) => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name} - {formatKWD(product.price)}
-                        </SelectItem>
-                      ))}
+                      {[...products]
+                        .sort((a, b) => a.name.localeCompare(b.name)) // 🔹 Sort alphabetically
+                        .map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} - {formatKWD(product.price)}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
