@@ -6,6 +6,7 @@ import {
   TrendingUp,
   LogOut,
   Settings,
+  Briefcase,
   Warehouse,
   Truck,
 } from "lucide-react";
@@ -35,6 +36,8 @@ const menuItems = [
   { title: "Planogram", url: "/planogram", icon: Grid3X3 },
   { title: "Stock Overview", url: "/stock", icon: TrendingUp },
   { title: "Sales Logs", url: "/sales", icon: BarChart3 },
+  // { title: 'Remote Dispense', url: '/remotedispense', icon: Settings },
+  // { title: 'Transactions', url: '/transactions', icon: Briefcase }
 ];
 
 export function AppSidebar() {

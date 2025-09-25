@@ -18,6 +18,8 @@ import Planogram from "./pages/Planogram";
 import Stock from "./pages/Stock";
 import Sales from "./pages/Sales";
 import NotFound from "./pages/NotFound";
+import RemoteDispense from "./pages/RemoteDispense";
+import Transactions from "./pages/Transactions";
 import VendorPage from "./pages/Vendor";
 
 const queryClient = new QueryClient();
@@ -47,6 +49,30 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/remotedispense" element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <div className="min-h-screen flex w-full">
+                    <AppSidebar />
+                    <main className="flex-1">
+                      <RemoteDispense />
+                    </main>
+                  </div>
+                </SidebarProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/transactions" element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <div className="min-h-screen flex w-full">
+                    <AppSidebar />
+                    <main className="flex-1">
+                      <Transactions />
+                    </main>
+                  </div>
+                </SidebarProvider>
+              </ProtectedRoute>
+            } />
             <Route
               path="/products"
               element={
