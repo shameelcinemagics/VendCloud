@@ -21,6 +21,7 @@ import NotFound from "./pages/NotFound";
 import RemoteDispense from "./pages/RemoteDispense";
 import Transactions from "./pages/Transactions";
 import VendorPage from "./pages/Vendor";
+import Myroute from "./pages/Myroute";
 
 const queryClient = new QueryClient();
 
@@ -49,30 +50,36 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route path="/remotedispense" element={
-              <ProtectedRoute>
-                <SidebarProvider>
-                  <div className="min-h-screen flex w-full">
-                    <AppSidebar />
-                    <main className="flex-1">
-                      <RemoteDispense />
-                    </main>
-                  </div>
-                </SidebarProvider>
-              </ProtectedRoute>
-            } />
-            <Route path="/transactions" element={
-              <ProtectedRoute>
-                <SidebarProvider>
-                  <div className="min-h-screen flex w-full">
-                    <AppSidebar />
-                    <main className="flex-1">
-                      <Transactions />
-                    </main>
-                  </div>
-                </SidebarProvider>
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/remotedispense"
+              element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <RemoteDispense />
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/transactions"
+              element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <Transactions />
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/products"
               element={
@@ -142,6 +149,21 @@ const App = () => (
                       <AppSidebar />
                       <main className="flex-1">
                         <Planogram />
+                      </main>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/myroute"
+              element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <Myroute />
                       </main>
                     </div>
                   </SidebarProvider>

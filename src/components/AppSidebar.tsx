@@ -9,6 +9,7 @@ import {
   Briefcase,
   Warehouse,
   Truck,
+  Route,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +35,7 @@ const menuItems = [
   { title: "Vendor", url: "/vendor", icon: Truck },
   { title: "Vending Machines", url: "/machines", icon: Monitor },
   { title: "Planogram", url: "/planogram", icon: Grid3X3 },
+  { title: "Myroute", url: "/myroute", icon: Route },
   { title: "Stock Overview", url: "/stock", icon: TrendingUp },
   { title: "Sales Logs", url: "/sales", icon: BarChart3 },
   // { title: 'Remote Dispense', url: '/remotedispense', icon: Settings },
