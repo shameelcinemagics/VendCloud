@@ -611,22 +611,6 @@ const Planogram = () => {
                     <Plus className="h-4 w-4 mr-2" />
                     +1 All Products
                   </Button>
-                  {/* <Button
-                    variant="outline"
-                    onClick={() => handleBulkIncrement(5)}
-                    disabled={loading}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    +5 All Products
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleBulkIncrement(10)}
-                    disabled={loading}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    +10 All Products
-                  </Button> */}
                 </div>
                 
                 {hasUnsavedChanges && (
