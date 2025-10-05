@@ -6,7 +6,9 @@ import {
   TrendingUp, 
   LogOut,
   Settings,
-  Briefcase
+  Briefcase,
+  MonitorPlay,
+  File
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,7 +35,9 @@ const menuItems = [
   { title: 'Stock Overview', url: '/stock', icon: TrendingUp },
   { title: 'Sales Logs', url: '/sales', icon: BarChart3 },
   { title: 'Remote Dispense', url: '/remotedispense', icon: Settings },
-  { title: 'Transactions', url: '/transactions', icon: Briefcase }
+  { title: 'Transactions', url: '/transactions', icon: Briefcase },
+  { title: 'Signage', url: '/signage', icon: MonitorPlay },
+  { title: 'Media', url: '/media', icon: File },
 ];
 
 export function AppSidebar() {
