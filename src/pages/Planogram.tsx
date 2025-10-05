@@ -32,6 +32,7 @@ interface Slot {
   product_id: string | null;
   quantity: number;
   max_capacity: number;
+  custom_price?: number | null;
   product?: Product;
   products?: Product;
 }
@@ -49,7 +50,8 @@ const Planogram = () => {
     slot_number: '',
     product_id: '',
     quantity: '',
-    max_capacity: '10'
+    max_capacity: '10',
+    custom_price: ''
   });
   const { toast } = useToast();
   
@@ -197,7 +199,8 @@ const fetchProducts = async () => {
         slot_number: parseInt(formData.slot_number),
         product_id: formData.product_id === 'none' || !formData.product_id ? null : formData.product_id,
         quantity: parseInt(formData.quantity),
-        max_capacity: parseInt(formData.max_capacity)
+        max_capacity: parseInt(formData.max_capacity),
+        custom_price: formData.custom_price !== '' ? parseFloat(formData.custom_price) : null
       };
 
       if (editingSlot) {
@@ -227,7 +230,7 @@ const fetchProducts = async () => {
 
       setIsDialogOpen(false);
       setEditingSlot(null);
-      setFormData({ slot_number: '', product_id: '', quantity: '', max_capacity: '10' });
+      setFormData({ slot_number: '', product_id: '', quantity: '', max_capacity: '10', custom_price :'' });
       fetchSlots();
     } catch (error) {
       console.error('Error saving slot:', error);
@@ -245,13 +248,14 @@ const fetchProducts = async () => {
       slot_number: slot.slot_number.toString(),
       product_id: slot.product_id || 'none',
       quantity: slot.quantity.toString(),
-      max_capacity: slot.max_capacity.toString()
+      max_capacity: slot.max_capacity.toString(),
+      custom_price: slot.custom_price || ''
     });
     setIsDialogOpen(true);
   };
 
   const resetForm = () => {
-    setFormData({ slot_number: '', product_id: '', quantity: '', max_capacity: '10' });
+    setFormData({ slot_number: '', product_id: '', quantity: '', max_capacity: '10', custom_price: '' });
     setEditingSlot(null);
   };
 
@@ -391,7 +395,24 @@ const fetchProducts = async () => {
                   <Label htmlFor="product_id">Product</Label>
                   <Select 
                     value={formData.product_id} 
-                    onValueChange={(value) => setFormData({ ...formData, product_id: value })}
+                    onValueChange={(value) => {
+                      if (value === 'none') {
+                        setFormData({
+                          ...formData,
+                          product_id: 'none',
+                          custom_price: ''
+                        });
+                        return;
+                      }
+                    
+                      const selectedProduct = products.find(p => p.id === value);
+                    
+                      setFormData({
+                        ...formData,
+                        product_id: value,
+                        custom_price: selectedProduct?.price || ''
+                      });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a product (optional)" />
@@ -407,6 +428,16 @@ const fetchProducts = async () => {
                         ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="custom_price">Custom Price (KWD)</Label>
+                  <Input
+                    id="custom_price"
+                    type="text"
+                    value={formData.custom_price}
+                    onChange={(e) => setFormData({ ...formData, custom_price: e.target.value })}
+                    placeholder="e.g. 0.750"
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -512,6 +543,11 @@ const fetchProducts = async () => {
                                    <div className="text-sm text-muted-foreground">
                                      {formatKWD(slot.products.price)}
                                    </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {slot.custom_price
+                                      ? formatKWD(slot.custom_price)
+                                      : formatKWD(slot.products?.price || '0')}
+                                  </div>
                                   <div className="text-sm">
                                     <span className={slot.quantity === 0 ? 'text-destructive' : 'text-green-600'}>
                                       {slot.quantity}/{slot.max_capacity}

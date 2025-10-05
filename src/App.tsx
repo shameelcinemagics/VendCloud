@@ -19,6 +19,8 @@ import Sales from "./pages/Sales";
 import NotFound from "./pages/NotFound";
 import RemoteDispense from "./pages/RemoteDispense";
 import Transactions from "./pages/Transactions";
+import Media from "./pages/Media";
+import Signage from "./pages/Signage";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +53,30 @@ const App = () => (
                     <AppSidebar />
                     <main className="flex-1">
                       <RemoteDispense />
+                    </main>
+                  </div>
+                </SidebarProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/signage" element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <div className="min-h-screen flex w-full">
+                    <AppSidebar />
+                    <main className="flex-1">
+                      <Signage />
+                    </main>
+                  </div>
+                </SidebarProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/media" element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <div className="min-h-screen flex w-full">
+                    <AppSidebar />
+                    <main className="flex-1">
+                      <Media />
                     </main>
                   </div>
                 </SidebarProvider>

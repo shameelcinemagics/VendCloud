@@ -170,9 +170,9 @@ const sendDispense = (slotNumber: number) => {
   }
   try {
     const currentMachine = machines.find((m) => m.id === selectedMachine);
-    const machineid = currentMachine?.machine_id
+    const machineId = currentMachine?.machine_id
     console.log(currentMachine)
-    const payload = { type: 'dispense',machineid, machineId: selectedMachine, slotNumber };
+    const payload = { type: 'dispense',machineId, slotNumber };
     console.log(payload)
     wsRef.current.send(JSON.stringify(payload));
     toast({ title: 'Dispensing...', description: `Requested slot ${slotNumber}` });
