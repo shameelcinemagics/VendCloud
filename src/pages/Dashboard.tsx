@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Monitor, TrendingUp, BarChart3 } from 'lucide-react';
+import SalesByMachineChart from '@/components/SalesByMachineChart';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -113,42 +114,19 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <Card>
+       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>Sales by Machine</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardContent className="grid grid-cols-1 md:grid-cols-1 gap-4">
           <Card className="p-4 hover:bg-accent cursor-pointer transition-colors">
-            <div className="flex items-center gap-3">
-              <Package className="h-8 w-8 text-primary" />
-              <div>
-                <h3 className="font-semibold">Add Product</h3>
-                <p className="text-sm text-muted-foreground">Create new product</p>
-              </div>
-            </div>
+
+
+      <SalesByMachineChart />
           </Card>
-          
-          <Card className="p-4 hover:bg-accent cursor-pointer transition-colors">
-            <div className="flex items-center gap-3">
-              <Monitor className="h-8 w-8 text-primary" />
-              <div>
-                <h3 className="font-semibold">Add Machine</h3>
-                <p className="text-sm text-muted-foreground">Register new machine</p>
-              </div>
-            </div>
-          </Card>
-          
-          <Card className="p-4 hover:bg-accent cursor-pointer transition-colors">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-8 w-8 text-primary" />
-              <div>
-                <h3 className="font-semibold">View Reports</h3>
-                <p className="text-sm text-muted-foreground">Check sales data</p>
-              </div>
-            </div>
-          </Card>
+
         </CardContent>
-      </Card>
+      </Card> 
     </div>
   );
 };
