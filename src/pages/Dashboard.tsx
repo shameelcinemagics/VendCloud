@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Monitor, TrendingUp, BarChart3 } from 'lucide-react';
 import SalesByMachineChart from '@/components/SalesByMachineChart';
+import SalesByMachineTable from '@/components/SalesByMachineTable';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -123,6 +124,19 @@ const Dashboard = () => {
 
 
       <SalesByMachineChart />
+          </Card>
+
+        </CardContent>
+      </Card> 
+      <Card>
+        <CardHeader>
+          <CardTitle>Sales by Machine</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-1 gap-4">
+          <Card className="p-4 hover:bg-accent cursor-pointer transition-colors">
+
+
+      <SalesByMachineTable />
           </Card>
 
         </CardContent>
