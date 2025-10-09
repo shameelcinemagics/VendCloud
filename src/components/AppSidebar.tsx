@@ -1,17 +1,20 @@
-import { 
-  Package, 
-  Monitor, 
-  Grid3X3, 
-  BarChart3, 
-  TrendingUp, 
+import {
+  Package,
+  Monitor,
+  Grid3X3,
+  BarChart3,
+  TrendingUp,
   LogOut,
   Settings,
   Briefcase,
   MonitorPlay,
-  File
-} from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+  File,
+  Warehouse,
+  Truck,
+  Route,
+} from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
   SidebarContent,
@@ -24,20 +27,23 @@ import {
   SidebarHeader,
   SidebarFooter,
   useSidebar,
-} from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
-  { title: 'Dashboard', url: '/dashboard', icon: BarChart3 },
-  { title: 'Products', url: '/products', icon: Package },
-  { title: 'Vending Machines', url: '/machines', icon: Monitor },
-  { title: 'Planogram', url: '/planogram', icon: Grid3X3 },
-  { title: 'Stock Overview', url: '/stock', icon: TrendingUp },
-  { title: 'Sales Logs', url: '/sales', icon: BarChart3 },
-  { title: 'Remote Dispense', url: '/remotedispense', icon: Settings },
-  { title: 'Transactions', url: '/transactions', icon: Briefcase },
-  { title: 'Signage', url: '/signage', icon: MonitorPlay },
-  { title: 'Media', url: '/media', icon: File },
+  { title: "Dashboard", url: "/dashboard", icon: BarChart3 },
+  { title: "Products", url: "/products", icon: Package },
+  // { title: "Warehouse", url: "/warehouse", icon: Warehouse },
+  // { title: "Vendor", url: "/vendor", icon: Truck },
+  { title: "Vending Machines", url: "/machines", icon: Monitor },
+  { title: "Planogram", url: "/planogram", icon: Grid3X3 },
+  { title: "Myroute", url: "/myroute", icon: Route },
+  { title: "Stock Overview", url: "/stock", icon: TrendingUp },
+  { title: "Sales Logs", url: "/sales", icon: BarChart3 },
+  { title: "Remote Dispense", url: "/remotedispense", icon: Settings },
+  { title: "Transactions", url: "/transactions", icon: Briefcase },
+  { title: "Signage", url: "/signage", icon: MonitorPlay },
+  { title: "Media", url: "/media", icon: File },
 ];
 
 export function AppSidebar() {
@@ -54,7 +60,7 @@ export function AppSidebar() {
     await signOut();
   };
 
-  const isCollapsed = state === 'collapsed';
+  const isCollapsed = state === "collapsed";
 
   return (
     <Sidebar className={isCollapsed ? "w-14" : "w-60"} collapsible="icon">

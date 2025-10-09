@@ -68,7 +68,7 @@ const Sales = () => {
   
     const rows = sales.map((sale) => {
       const date = new Date(sale.sold_at);
-      const unitPrice = Number(sale.products?.price || 0);
+      const unitPrice = Number(sale.unit_price || 0);
       const total = unitPrice * sale.quantity;
   
       return [
@@ -163,7 +163,7 @@ const Sales = () => {
   const getSalesStats = () => {
     const totalSales = sales.reduce((sum, sale) => sum + sale.quantity, 0);
     const totalRevenue = sales.reduce((sum, sale) => {
-      const productPrice = Number(sale.products?.price || 0);
+      const productPrice = Number(sale.unit_price || 0);
       return sum + (productPrice * sale.quantity);
     }, 0);
     const uniqueProducts = new Set(sales.map(sale => sale.product_id)).size;
@@ -310,7 +310,7 @@ const Sales = () => {
               </TableHeader>
               <TableBody>
                 {sales.map((sale) => {
-                  const unitPrice = Number(sale.products?.price || 0);
+                  const unitPrice = Number(sale.unit_price || 0);
                   const total = unitPrice * sale.quantity;
                   
                   return (

@@ -119,6 +119,7 @@ const Transactions = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date & Time</TableHead>
+                  <TableHead>Transaction ID</TableHead>
                   <TableHead>Machine</TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead>Status</TableHead>
@@ -130,6 +131,7 @@ const Transactions = () => {
                     <TableCell>
                       {new Date(t.created_at).toLocaleDateString()} {new Date(t.created_at).toLocaleTimeString()}
                     </TableCell>
+                    <TableCell className="font-medium">{t.transationId}</TableCell>
                     <TableCell className="font-medium">{t.machine}</TableCell>
                     <TableCell>{t.product}</TableCell>
                     <TableCell>

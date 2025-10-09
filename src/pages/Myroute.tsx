@@ -1,0 +1,793 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Grid3X3, Plus, Edit, Save, Trash2, Minus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { formatKWD } from "@/lib/currency";
+
+interface VendingMachine {
+  id: string;
+  machine_id: string;
+  location: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: string;
+  image_url?: string;
+}
+
+interface Slot {
+  id: string;
+  vending_machine_id: string;
+  slot_number: number;
+  product_id: string | null;
+  quantity: number;
+  max_capacity: number;
+  product?: Product;
+  products?: Product;
+}
+
+const Planogram = () => {
+  const [machines, setMachines] = useState<VendingMachine[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedMachine, setSelectedMachine] = useState<string>("");
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
+  const [formData, setFormData] = useState({
+    slot_number: "",
+    product_id: "",
+    quantity: "",
+    max_capacity: "10",
+  });
+  const [pendingChanges, setPendingChanges] = useState<Record<string, number>>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchMachines();
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    if (selectedMachine) {
+      initializeSlots();
+    }
+  }, [selectedMachine]);
+
+  const initializeSlots = async () => {
+    if (!selectedMachine) return;
+
+    setLoading(true);
+    try {
+      const { data: existingSlots, error: fetchError } = await supabase
+        .from("slots")
+        .select(
+          `
+          *,
+          products (
+            id,
+            name,
+            price,
+            image_url
+          )
+        `
+        )
+        .eq("vending_machine_id", selectedMachine)
+        .order("slot_number");
+
+      if (fetchError) throw fetchError;
+
+      const existingSlotNumbers = new Set(
+        (existingSlots || []).map((slot) => slot.slot_number)
+      );
+      const slotsToCreate = [];
+      const skipSlots = new Set([2, 4, 6, 8, 10, 22, 24, 26, 28, 30]);
+
+      for (let i = 1; i <= 60; i++) {
+        if (!existingSlotNumbers.has(i) && !skipSlots.has(i)) {
+          slotsToCreate.push({
+            vending_machine_id: selectedMachine,
+            slot_number: i,
+            product_id: null,
+            quantity: 0,
+            max_capacity: 10,
+          });
+        }
+      }
+
+      if (slotsToCreate.length > 0) {
+        const { error: insertError } = await supabase
+          .from("slots")
+          .insert(slotsToCreate);
+
+        if (insertError) throw insertError;
+      }
+
+      fetchSlots();
+    } catch (error) {
+      console.error("Error initializing slots:", error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize machine slots",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMachines = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("vending_machines")
+        .select("id, machine_id, location")
+        .eq("status", "active");
+
+      if (error) throw error;
+      setMachines(data || []);
+    } catch (error) {
+      console.error("Error fetching machines:", error);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, price, image_url");
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+
+  const fetchSlots = async () => {
+    if (!selectedMachine) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("slots")
+        .select(
+          `
+          *,
+          products (
+            id,
+            name,
+            price,
+            image_url
+          )
+        `
+        )
+        .eq("vending_machine_id", selectedMachine)
+        .order("slot_number");
+
+      if (error) throw error;
+      setSlots(data || []);
+    } catch (error) {
+      console.error("Error fetching slots:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch slot data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuantityChange = (slotId: string, newQuantity: number) => {
+    if (newQuantity < 0) return; // Prevent going below 0
+
+    // Get the slot to check max capacity
+    const slot = slots.find((s) => s.id === slotId);
+    if (!slot) return;
+
+    // Prevent going above max capacity
+    if (newQuantity > slot.max_capacity) {
+      toast({
+        title: "Limit Reached",
+        description: `Quantity cannot exceed ${slot.max_capacity}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Update pending changes
+    setPendingChanges(prev => ({
+      ...prev,
+      [slotId]: newQuantity
+    }));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleBulkIncrement = (increment: number) => {
+    const newPendingChanges = { ...pendingChanges };
+    
+    slots.forEach(slot => {
+      if (slot.product_id) {
+        const currentQuantity = pendingChanges[slot.id] !== undefined 
+          ? pendingChanges[slot.id] 
+          : slot.quantity;
+        const newQuantity = currentQuantity + increment;
+        
+        if (newQuantity >= 0 && newQuantity <= slot.max_capacity) {
+          newPendingChanges[slot.id] = newQuantity;
+        }
+      }
+    });
+    
+    setPendingChanges(newPendingChanges);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSaveAllChanges = async () => {
+    if (!hasUnsavedChanges) return;
+
+    setLoading(true);
+    try {
+      const updatePromises = Object.entries(pendingChanges).map(([slotId, quantity]) =>
+        supabase
+          .from("slots")
+          .update({ quantity })
+          .eq("id", slotId)
+      );
+
+      const results = await Promise.all(updatePromises);
+      
+      // Check for any errors
+      const errors = results.filter(result => result.error);
+      if (errors.length > 0) {
+        throw new Error(`Failed to update ${errors.length} slots`);
+      }
+
+      // Update local state
+      setSlots((prevSlots) =>
+        prevSlots.map((slot) =>
+          pendingChanges[slot.id] !== undefined 
+            ? { ...slot, quantity: pendingChanges[slot.id] }
+            : slot
+        )
+      );
+
+      // Clear pending changes
+      setPendingChanges({});
+      setHasUnsavedChanges(false);
+
+      toast({
+        title: "Success",
+        description: `Updated ${Object.keys(pendingChanges).length} slot quantities successfully`,
+      });
+    } catch (error) {
+      console.error("Error saving changes:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save quantity changes",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDiscardChanges = () => {
+    setPendingChanges({});
+    setHasUnsavedChanges(false);
+    toast({
+      title: "Changes Discarded",
+      description: "All pending changes have been discarded",
+    });
+  };
+
+  const getCurrentQuantity = (slot: Slot) => {
+    return pendingChanges[slot.id] !== undefined ? pendingChanges[slot.id] : slot.quantity;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const slotData = {
+        vending_machine_id: selectedMachine,
+        slot_number: parseInt(formData.slot_number),
+        product_id:
+          formData.product_id === "none" || !formData.product_id
+            ? null
+            : formData.product_id,
+        quantity: parseInt(formData.quantity),
+        max_capacity: parseInt(formData.max_capacity),
+      };
+
+      if (editingSlot) {
+        const { error } = await supabase
+          .from("slots")
+          .update(slotData)
+          .eq("id", editingSlot.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Slot updated successfully",
+        });
+      } else {
+        const { error } = await supabase.from("slots").insert([slotData]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Slot created successfully",
+        });
+      }
+
+      setIsDialogOpen(false);
+      setEditingSlot(null);
+      setFormData({
+        slot_number: "",
+        product_id: "",
+        quantity: "",
+        max_capacity: "10",
+      });
+      fetchSlots();
+    } catch (error) {
+      console.error("Error saving slot:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save slot",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (slot: Slot) => {
+    setEditingSlot(slot);
+    setFormData({
+      slot_number: slot.slot_number.toString(),
+      product_id: slot.product_id || "none",
+      quantity: slot.quantity.toString(),
+      max_capacity: slot.max_capacity.toString(),
+    });
+    setIsDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      slot_number: "",
+      product_id: "",
+      quantity: "",
+      max_capacity: "10",
+    });
+    setEditingSlot(null);
+  };
+
+  const handleDelete = async (slotId: string) => {
+    if (!confirm("Are you sure you want to clear this slot?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("slots")
+        .update({
+          product_id: null,
+          quantity: 0,
+        })
+        .eq("id", slotId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Slot cleared successfully",
+      });
+      fetchSlots();
+    } catch (error) {
+      console.error("Error clearing slot:", error);
+      toast({
+        title: "Error",
+        description: "Failed to clear slot",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddSlot = () => {
+    const emptySlot = slots.find((slot) => !slot.product_id);
+    if (!emptySlot) {
+      toast({
+        title: "No empty slots",
+        description: "All 60 slots are currently occupied",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    handleEdit(emptySlot);
+  };
+
+  const createGridLayout = () => {
+    const sortedSlots = slots.sort((a, b) => a.slot_number - b.slot_number);
+
+    const rowPatterns = [
+      [1, 3, 5, 7, 9],
+      [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      [21, 23, 25, 27, 29],
+      [31, 32, 33, 34, 35, 36, 37, 38, 39, 40],
+      [41, 42, 43, 44, 45, 46, 47, 48, 49, 50],
+      [51, 52, 53, 54, 55, 56, 57, 58, 59, 60],
+    ];
+
+    return rowPatterns
+      .map((rowSlots) =>
+        rowSlots
+          .map((slotNum) =>
+            sortedSlots.find((slot) => slot.slot_number === slotNum)
+          )
+          .filter(Boolean)
+      )
+      .filter((row) => row.length > 0);
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Quantity Management</h1>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Select Machine</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <Label htmlFor="machine-select">Vending Machine</Label>
+              <Select
+                value={selectedMachine}
+                onValueChange={setSelectedMachine}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a vending machine" />
+                </SelectTrigger>
+                <SelectContent>
+                  {machines.map((machine) => (
+                    <SelectItem key={machine.id} value={machine.id}>
+                      {machine.machine_id} - {machine.location}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* {selectedMachine && (
+              <div className="flex gap-2">
+                <Button onClick={handleAddSlot}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Slot
+                </Button>
+              </div>
+            )} */}
+          </div>
+
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) resetForm();
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingSlot ? "Edit Slot" : "Add New Slot"}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="slot_number">Slot Number</Label>
+                  <Input
+                    id="slot_number"
+                    type="number"
+                    min="1"
+                    value={formData.slot_number}
+                    onChange={(e) =>
+                      setFormData({ ...formData, slot_number: e.target.value })
+                    }
+                    required
+                    disabled={editingSlot !== null}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="product_id">Product</Label>
+                  <Select
+                    value={formData.product_id}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, product_id: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a product (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Product</SelectItem>
+                      {[...products]
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} - {formatKWD(product.price)}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Current Quantity</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min="0"
+                      value={formData.quantity}
+                      onChange={(e) =>
+                        setFormData({ ...formData, quantity: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="max_capacity">Max Capacity</Label>
+                    <Input
+                      id="max_capacity"
+                      type="number"
+                      min="1"
+                      value={formData.max_capacity}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          max_capacity: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    <Save className="h-4 w-4 mr-2" />
+                    {editingSlot ? "Update" : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </CardContent>
+      </Card>
+
+      {selectedMachine && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Bulk Quantity Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleBulkIncrement(1)}
+                    disabled={loading}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    +1 All Products
+                  </Button>
+                </div>
+                
+                {hasUnsavedChanges && (
+                  <div className="flex gap-2 ml-auto">
+                    <Badge variant="outline" className="text-orange-600 border-orange-600">
+                      {Object.keys(pendingChanges).length} unsaved changes
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      onClick={handleDiscardChanges}
+                      disabled={loading}
+                    >
+                      Discard Changes
+                    </Button>
+                    <Button
+                      onClick={handleSaveAllChanges}
+                      disabled={loading}
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Save All Changes
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Quantity Configuration</CardTitle>
+            </CardHeader>
+          <CardContent className="h-full p-0">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="h-full overflow-x-auto overflow-y-auto p-8">
+                <div className="text-center text-lg text-muted-foreground mb-6">
+                  Machine Slots (60 total,{" "}
+                  {slots.filter((s) => s.product_id).length} occupied)
+                </div>
+                <div className="space-y-4">
+                  {createGridLayout().map((row, rowIndex) => (
+                    <div key={rowIndex} className="space-y-2">
+                      <div className="text-sm text-muted-foreground font-medium">
+                        Row {rowIndex + 1} ({row.length} slots)
+                      </div>
+                      <div className="grid gap-6 grid-cols-5 justify-center">
+                        {row.map((slot) => (
+                          <Card
+                            key={slot.id}
+                            className={`relative w-full h-[28rem] ${
+                              !slot.product_id
+                                ? "border-dashed border-2 opacity-60"
+                                : ""
+                            }`}
+                          >
+                            <CardContent className="p-4 h-full flex flex-col">
+                              <div className="flex justify-between items-center mb-3">
+                                <Badge
+                                  variant="outline"
+                                  className="text-sm font-medium"
+                                >
+                                  {slot.slot_number}
+                                </Badge>
+                                <div className="flex gap-1">
+                                  {slot.product_id && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => handleDelete(slot.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              {slot?.product_id && slot.products ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3">
+                                  {slot.products.image_url && (
+                                    <img
+                                      src={slot.products.image_url}
+                                      alt={slot.products.name}
+                                      className="w-40 h-40 object-cover rounded-lg mx-auto"
+                                    />
+                                  )}
+                                  <div className="text-sm font-medium truncate w-full px-1">
+                                    {slot.products.name}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {formatKWD(slot.products.price)}
+                                  </div>
+
+                                  {/* Quantity Controls */}
+                                  <div className="flex flex-col items-center space-y-2 w-full">
+                                    <div className="text-sm font-medium">
+                                      Quantity: {getCurrentQuantity(slot)}/
+                                      {slot.max_capacity}
+                                      {pendingChanges[slot.id] !== undefined && (
+                                        <span className="text-orange-600 ml-1">*</span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 w-8 p-0"
+                                        onClick={() =>
+                                          handleQuantityChange(
+                                            slot.id,
+                                            getCurrentQuantity(slot) - 1
+                                          )
+                                        }
+                                        disabled={getCurrentQuantity(slot) <= 0}
+                                      >
+                                        <Minus className="h-4 w-4" />
+                                      </Button>
+                                      <span className="text-sm font-medium min-w-[2rem] text-center">
+                                        {getCurrentQuantity(slot)}
+                                      </span>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 w-8 p-0"
+                                        onClick={() =>
+                                          handleQuantityChange(
+                                            slot.id,
+                                            getCurrentQuantity(slot) + 1
+                                          )
+                                        }
+                                        disabled={
+                                          getCurrentQuantity(slot) >= slot.max_capacity
+                                        }
+                                      >
+                                        <Plus className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  <div className="w-full bg-muted rounded-full h-2">
+                                    <div
+                                      className="bg-primary h-2 rounded-full transition-all"
+                                      style={{
+                                        width: `${
+                                          (getCurrentQuantity(slot) / slot.max_capacity) *
+                                          100
+                                        }%`,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex-1 flex items-center justify-center">
+                                  <div className="text-center">
+                                    <div className="text-sm text-muted-foreground">
+                                      Empty
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default Planogram;
